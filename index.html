@@ -174,15 +174,15 @@
         ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 10px; }
         ::-webkit-scrollbar-thumb { background: rgba(96,165,250,0.5); border-radius: 10px; }
         .author-link {
-            color: #10b981; /* A bright green that matches your existing color palette */
+            color: #10b981; 
             text-decoration: none;
             font-weight: 600;
-            pointer-events: auto; /* CRITICAL: Overrides the pointer-events: none from .copyright */
+            pointer-events: auto; 
             transition: color 0.2s ease, text-shadow 0.2s ease;
         }
 
         .author-link:hover {
-            color: #34d399; /* Lighter green on hover */
+            color: #34d399; 
             text-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
         }
     </style>
@@ -353,7 +353,19 @@ const colorStrings = ['#3b82f6', '#10b981', '#f43f5e', '#f59e0b', '#8b5cf6', '#0
 
 // --- DATA PIPELINE ARCHITECTURE ---
 function createStandardPaper() {
-    return { title: "", year: 0, citations: 0, doi: "", authors: [], concepts: [], abstract: "", sources: [], originalIds: {} };
+    return { 
+        title: "", 
+        year: 0, 
+        citations: 0, 
+        doi: "", 
+        journal: "", 
+        authors: [], 
+        concepts: [], 
+        abstract: "", 
+        fullTextUrl: "", 
+        sources: [], 
+        originalIds: {} 
+    };
 }
 
 function reconstructAbstract(inv) {
@@ -410,16 +422,82 @@ async function fetchSemanticScholar(query) {
     }
 }
 
+async function fetchCrossref(query) {
+    try {
+        const res = await fetch(`https://api.crossref.org/works?query=${encodeURIComponent(query)}&select=title,author,published,is-referenced-by-count,DOI,container-title,abstract,type&rows=100`);
+        const data = await res.json();
+        
+        const validPapers = [];
+        for (const p of data.message.items) {
+            // Aggressive Filtering
+            const title = p.title?.[0] || "";
+            if (!title || title.length < 10) continue;
+            if (!p.author || p.author.length === 0) continue;
+            if (!p.DOI) continue;
+            if (p.type === 'journal-issue' || p.type.includes('correction') || p.type.includes('editorial')) continue;
+
+            let paper = createStandardPaper();
+            paper.title = title;
+            paper.year = p.published?.['date-parts']?.[0]?.[0] || 0; 
+            paper.citations = p['is-referenced-by-count'] || 0;
+            paper.doi = p.DOI;
+            paper.journal = p['container-title']?.[0] || "";
+            paper.authors = p.author.map(a => `${a.given || ''} ${a.family || ''}`.trim());
+            paper.abstract = p.abstract ? p.abstract.replace(/<[^>]*>?/gm, '') : ""; 
+            paper.sources.push("Crossref");
+            
+            validPapers.push(paper);
+        }
+        return validPapers;
+    } catch (e) {
+        console.warn("Crossref fetch failed:", e);
+        return [];
+    }
+}
+
+async function fetchCORE(query) {
+    const CORE_API_KEY = 'YOUR_CORE_API_KEY_HERE'; // Add your key to enable full-text links
+    if (CORE_API_KEY === 'YOUR_CORE_API_KEY_HERE') return []; 
+    try {
+        const res = await fetch(`https://api.core.ac.uk/v3/search/works?q=${encodeURIComponent(query)}&limit=100`, {
+            headers: { 'Authorization': `Bearer ${CORE_API_KEY}` }
+        });
+        if (!res.ok) throw new Error("CORE rate limit or auth error");
+        const data = await res.json();
+        return data.results.map(p => {
+            let paper = createStandardPaper();
+            paper.title = p.title || "Untitled";
+            paper.year = p.yearPublished || 0;
+            paper.citations = p.citationCount || 0;
+            paper.doi = p.doi || "";
+            paper.authors = p.authors?.map(a => a.name) || [];
+            paper.abstract = p.abstract || "";
+            paper.fullTextUrl = p.downloadUrl || p.sourceFulltextUrls?.[0] || "";
+            paper.sources.push("CORE");
+            return paper;
+        });
+    } catch (e) {
+        console.warn("CORE fetch failed:", e);
+        return [];
+    }
+}
+
 function mergeAndDeduplicate(allPapers) {
     const mergedMap = new Map();
     allPapers.forEach(paper => {
         if (!paper.title) return;
-        let uniqueKey = paper.doi ? `doi_${paper.doi}` : `title_${paper.title.toLowerCase().trim()}_${paper.year}`;
+        let uniqueKey = paper.doi ? `doi_${paper.doi.toLowerCase()}` : `title_${paper.title.toLowerCase().trim()}_${paper.year}`;
         if (mergedMap.has(uniqueKey)) {
             let existing = mergedMap.get(uniqueKey);
+            
             existing.citations = Math.max(existing.citations, paper.citations);
             existing.concepts = [...new Set([...existing.concepts, ...paper.concepts])];
+            
+            // Enrich missing data fields
             if (!existing.abstract && paper.abstract) existing.abstract = paper.abstract;
+            if (!existing.journal && paper.journal) existing.journal = paper.journal;
+            if (!existing.fullTextUrl && paper.fullTextUrl) existing.fullTextUrl = paper.fullTextUrl;
+            
             existing.authors = [...new Set([...existing.authors, ...paper.authors])];
             paper.sources.forEach(s => { if (!existing.sources.includes(s)) existing.sources.push(s); });
             Object.assign(existing.originalIds, paper.originalIds);
@@ -529,14 +607,17 @@ async function explore() {
     try {
         loadingText.innerText = "SCANNING GLOBAL ARCHIVES...";
         loadingSubtext.innerText = "Extracting concepts, authors, and publications...";
-        const oaPapers = await fetchOpenAlex(topic);
-
-        loadingText.innerText = "MAPPING CITATION NETWORKS...";
-        loadingSubtext.innerText = "Tracing conceptual links and influences...";
-        const s2Papers = await fetchSemanticScholar(topic);
+        
+        // Fetch from all sources concurrently
+        const [oaPapers, s2Papers, crPapers, corePapers] = await Promise.all([
+            fetchOpenAlex(topic),
+            fetchSemanticScholar(topic),
+            fetchCrossref(topic),
+            fetchCORE(topic)
+        ]);
 
         loadingText.innerText = "MERGING KNOWLEDGE GRAPH...";
-        const combinedRaw = [...oaPapers, ...s2Papers];
+        const combinedRaw = [...oaPapers, ...s2Papers, ...crPapers, ...corePapers];
         const finalPapers = mergeAndDeduplicate(combinedRaw);
         loadingSubtext.innerText = `Synthesized ${finalPapers.length} unique nodes.`;
 
@@ -564,13 +645,19 @@ async function explore() {
                 cz = Math.sin(angle) * dist;
                 cy = (Math.random() - 0.5) * 160;
             }
-            const galaxyRadius = 45 + (clusterPapers.length * 2.8);
-            const galaxyMesh = buildSpiralGalaxy(hexColor, 2200 + (clusterPapers.length * 120), galaxyRadius);
+            
+            // Scaled dynamically based on paper count
+            const paperCount = clusterPapers.length;
+            const scalingFactor = Math.pow(paperCount, 0.65); 
+            const galaxyRadius = 30 + (scalingFactor * 8); 
+            const particleCount = Math.floor(1500 + (scalingFactor * 250)); 
+
+            const galaxyMesh = buildSpiralGalaxy(hexColor, particleCount, galaxyRadius);
             galaxyMesh.position.set(cx, cy, cz);
            
             const hitbox = new THREE.Mesh(new THREE.SphereGeometry(galaxyRadius * 0.75, 16, 16), new THREE.MeshBasicMaterial({ visible: false }));
             hitbox.position.set(cx, cy, cz);
-            hitbox.userData = { isGalaxy: true, title: conceptName, paperCount: clusterPapers.length, colorHex: hexColor, colorStr: strColor, papers: clusterPapers, coords: {x:cx, y:cy, z:cz} };
+            hitbox.userData = { isGalaxy: true, title: conceptName, paperCount: paperCount, colorHex: hexColor, colorStr: strColor, papers: clusterPapers, coords: {x:cx, y:cy, z:cz} };
            
             universeGroup.add(galaxyMesh);
             universeGroup.add(hitbox);
@@ -640,8 +727,9 @@ function diveIntoGalaxy(galaxyData) {
             year: year,
             citations: citations,
             authors: paper.authors.slice(0,3).join(", ") || "Unknown",
+            journal: paper.journal || "",
             abstract: paper.abstract || "Abstract not available in the queried databases.",
-            url: paper.doi ? "https://doi.org/" + paper.doi : `https://scholar.google.com/scholar?q=${encodeURIComponent(paper.title)}`,
+            url: paper.fullTextUrl || (paper.doi ? "https://doi.org/" + paper.doi : `https://scholar.google.com/scholar?q=${encodeURIComponent(paper.title)}`),
             concept: galaxyData.title,
             colorStr: galaxyData.colorStr,
             author: primaryAuthor,
@@ -721,13 +809,15 @@ window.addEventListener('click', () => {
             new TWEEN.Tween(controls.target).to({ x: obj.position.x, y: obj.position.y, z: obj.position.z }, 800).easing(TWEEN.Easing.Quadratic.Out).start();
             
             const badgesHTML = d.sources.map(s => `<span class="source-badge">${s}</span>`).join('');
-            
+            const journalHTML = d.journal ? `<p style="color:#60a5fa; margin-top:0px; margin-bottom:15px; font-size:0.85em;"><i>${d.journal}</i></p>` : '';
+
             sidePanel.style.right = "25px";
             sidePanel.innerHTML = `
                 <button onclick="document.getElementById('sidePanel').style.right='-420px'" style="float:right;background:none;border:none;color:white;font-size:18px;cursor:pointer;">✕</button>
                 <span style="background: ${d.colorStr}33; color: ${d.colorStr}; padding: 4px 10px; border-radius: 20px; font-size: 0.8em; border: 1px solid ${d.colorStr};">${d.concept}</span>
                 <h2 style="margin:12px 0; color:#e2e8f0; font-size:1.4em;">${d.title}</h2>
-                <p style="color:#94a3b8; margin-bottom:10px; font-size:0.9em;">${d.authors}</p>
+                <p style="color:#94a3b8; margin-bottom:5px; font-size:0.9em;">${d.authors}</p>
+                ${journalHTML}
                 <div style="margin-bottom: 20px;">${badgesHTML}</div>
                 <div style="background:rgba(0,0,0,0.4); padding:12px; border-radius:10px; display:flex; justify-content:space-between; margin-bottom: 15px; border-left: 4px solid ${d.colorStr}">
                     <div>📅 Year: <b>${d.year}</b></div>

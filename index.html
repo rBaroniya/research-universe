@@ -24,7 +24,6 @@
             justify-content: center;
             background: radial-gradient(circle at center, rgba(1, 3, 8, 0.6) 0%, #010308 90%);
             transition: opacity 1s ease-in-out;
-            /* Safe area insets prevent overlap with iOS notch and status bar */
             padding: max(40px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom)) 20px;
             overflow-y: auto; 
         }
@@ -89,7 +88,6 @@
             color: white;
             outline: none;
             width: 100%;
-            /* 16px font size is critical to prevent iOS Safari from auto-zooming on tap */
             font-size: 16px !important; 
         }
 
@@ -206,12 +204,12 @@
             .search { flex-direction: column; border-radius: 20px; background: rgba(10, 15, 30, 0.5); border: none; box-shadow: none;}
             .search input { border: 1px solid rgba(96, 165, 250, 0.4); }
             button.action-btn { width: 100%; }
-            .universe-stats { display: none; } /* Hide stats on small screens to save space */
+            .universe-stats { display: none; } 
             
             #sidePanel {
                 width: 100%;
                 height: 65vh;
-                bottom: -100%; /* Hidden off bottom */
+                bottom: -100%; 
                 left: 0;
                 border-radius: 24px 24px 0 0;
                 padding: 25px 20px;
@@ -222,14 +220,17 @@
             }
             #sidePanel.active { bottom: 0; }
             #backBtn { font-size: 13px; padding: 10px 16px; top: 15px; left: 15px;}
-            #hoverTooltip { display: none !important; } /* Disable tooltips on touch */
+            #hoverTooltip { display: none !important; }
+            
+            /* Tucking the copyright away safely */
+            .copyright { font-size: 0.65em; bottom: 8px; left: 12px; }
         }
 
         @media (min-width: 769px) {
             #sidePanel {
                 width: 420px;
                 height: calc(100vh - 40px);
-                right: -450px; /* Hidden off right */
+                right: -450px; 
                 top: 20px;
                 border-radius: 18px;
                 padding: 30px;
@@ -326,7 +327,7 @@ setTimeout(typePlaceholder, 1000);
 const streamWords = ["Paper", "Author", "Citation", "Concept", "DOI", "Journal"];
 function spawnStream() {
     if (document.getElementById("hero-interface").style.opacity === "0") return;
-    if (window.innerWidth < 768) return; // Disable stream words on mobile for performance
+    if (window.innerWidth < 768) return; 
     const container = document.getElementById("knowledge-streams");
     const el = document.createElement("div");
     el.className = "stream-word";
@@ -353,8 +354,8 @@ const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x010308, 0.0012);
 const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 10000);
 
-// Adjusted to keep desktop "zoomed in" like the original version, but scale out for mobile
-camera.position.set(0, window.innerWidth < 768 ? 500 : 380, window.innerWidth < 768 ? 1200 : 850);
+// Set camera significantly closer on mobile so galaxies are big and tap-able
+camera.position.set(0, window.innerWidth < 768 ? 450 : 380, window.innerWidth < 768 ? 900 : 850);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -431,7 +432,7 @@ async function fetchOpenAlex(query) {
         });
     } catch (e) { return []; }
 }
-// Merging handles deduplication
+
 function mergeAndDeduplicate(allPapers) {
     const mergedMap = new Map();
     allPapers.forEach(paper => {
@@ -537,7 +538,7 @@ async function explore() {
     zoomOutToUniverse(false);
 
     try {
-        const combinedRaw = await fetchOpenAlex(topic); // Simplified fetch for demo
+        const combinedRaw = await fetchOpenAlex(topic); 
         const finalPapers = mergeAndDeduplicate(combinedRaw);
         
         const clusters = {};
@@ -547,7 +548,6 @@ async function explore() {
             clusters[primaryConcept].push(paper);
         });
         
-        // Structure: Core Galaxy (Biggest cluster) in center, satellites orbiting
         const sortedClusters = Object.entries(clusters).sort((a,b) => b[1].length - a[1].length).slice(0, 8);
         
         sortedClusters.forEach((cluster, index) => {
@@ -557,7 +557,6 @@ async function explore() {
             const strColor = colorStrings[index % colorStrings.length];
             
             let cx = 0, cy = 0, cz = 0;
-            // Place the dominant cluster at the center (0,0,0). Orbit others around it.
             if (index > 0) {
                 const angle = (index / (sortedClusters.length - 1)) * Math.PI * 2;
                 const dist = 350 + (Math.random() * 150);
@@ -574,7 +573,9 @@ async function explore() {
             const galaxyMesh = buildSpiralGalaxy(hexColor, particleCount, galaxyRadius);
             galaxyMesh.position.set(cx, cy, cz);
             
-            const hitbox = new THREE.Mesh(new THREE.SphereGeometry(galaxyRadius * 0.8, 16, 16), new THREE.MeshBasicMaterial({ visible: false }));
+            // Massively expanded the invisible tap hitbox size for mobile users
+            const hitRadius = galaxyRadius * (window.innerWidth < 768 ? 1.6 : 0.8);
+            const hitbox = new THREE.Mesh(new THREE.SphereGeometry(hitRadius, 16, 16), new THREE.MeshBasicMaterial({ visible: false }));
             hitbox.position.set(cx, cy, cz);
             hitbox.userData = { isGalaxy: true, title: conceptName, paperCount: paperCount, colorHex: hexColor, colorStr: strColor, papers: clusterPapers, coords: {x:cx, y:cy, z:cz} };
             
@@ -583,8 +584,8 @@ async function explore() {
             interactableNodes.push(hitbox);
         });
 
-        // Set camera target back to original "zoomed in" values on desktop, kept adapted for mobile
-        new TWEEN.Tween(camera.position).to({ x: 0, y: window.innerWidth < 768 ? 550 : 380, z: window.innerWidth < 768 ? 1200 : 850 }, 2800).easing(TWEEN.Easing.Cubic.Out).start();
+        // Set camera target closer for mobile
+        new TWEEN.Tween(camera.position).to({ x: 0, y: window.innerWidth < 768 ? 450 : 380, z: window.innerWidth < 768 ? 950 : 850 }, 2800).easing(TWEEN.Easing.Cubic.Out).start();
         new TWEEN.Tween(controls.target).to({ x: 0, y: 0, z: 0 }, 2800).easing(TWEEN.Easing.Cubic.Out).start();
     } catch (e) { 
         console.error(e); 
@@ -604,8 +605,6 @@ function diveIntoGalaxy(galaxyData) {
 
     const papers = galaxyData.papers;
     
-    // ANALYTICAL CLASSIFICATION AXES
-    // Calculate boundaries for Time (Y-Axis) and Impact (Radius)
     const validYears = papers.map(p => parseInt(p.year)).filter(y => !isNaN(y) && y > 1900);
     const minYear = validYears.length ? Math.min(...validYears) : 2000;
     const maxYear = validYears.length ? Math.max(...validYears) : new Date().getFullYear();
@@ -637,25 +636,25 @@ function diveIntoGalaxy(galaxyData) {
         }
         const nodeColor = authorColorMap[primaryAuthor];
 
-        // NEW MATHEMATICAL LAYOUT
-        // 1. Y-Axis = Chronological Timeline
         const yearNorm = (maxYear === minYear) ? 0.5 : (year - minYear) / (maxYear - minYear);
         const heightSpread = window.innerWidth < 768 ? 300 : 220;
         const py = galaxyData.coords.y - (heightSpread/2) + (yearNorm * heightSpread);
 
-        // 2. Radius = Citation Density (Inverse: high citations = close to core)
         const citeNorm = Math.min(citations / maxCites, 1);
         const radiusMax = window.innerWidth < 768 ? 140 : 200;
         const radius = 10 + Math.pow(1 - citeNorm, 2) * radiusMax + (Math.random() * 15);
         
-        // 3. Angle = Golden Ratio spread for organic distribution
-        const angle = i * 2.39996; // Golden angle
+        const angle = i * 2.39996; 
 
         const px = galaxyData.coords.x + Math.cos(angle) * radius;
         const pz = galaxyData.coords.z + Math.sin(angle) * radius;
 
         const nodeGroup = createPaperNode(citations, year, galaxyData.colorHex, nodeColor);
         nodeGroup.position.set(px, py, pz);
+        
+        // Expanded paper hitbox to make single papers easier to tap
+        const nodeHitbox = new THREE.Mesh(new THREE.SphereGeometry(window.innerWidth < 768 ? 8 : 5, 8, 8), new THREE.MeshBasicMaterial({ visible: false }));
+        nodeGroup.add(nodeHitbox);
         
         nodeGroup.userData = {
             isGalaxy: false, title: paper.title, year: year, citations: citations,
@@ -673,7 +672,7 @@ function diveIntoGalaxy(galaxyData) {
     const lineMat = new THREE.LineBasicMaterial({ color: galaxyData.colorHex, transparent: true, opacity: 0.15, blending: THREE.AdditiveBlending });
     for(let i = 0; i < clusterNodes.length; i++) {
         for(let j = i + 1; j < clusterNodes.length; j++) {
-            if (Math.random() < 0.1) { // Reduced line density for performance
+            if (Math.random() < 0.1) { 
                 const d1 = clusterNodes[i].position;
                 const d2 = clusterNodes[j].position;
                 if (d1.distanceTo(d2) < 90) {
@@ -703,7 +702,7 @@ function zoomOutToUniverse(animate = true) {
     systemLight.intensity = 0;
 
     if (animate) {
-        new TWEEN.Tween(camera.position).to({ x: 0, y: window.innerWidth < 768 ? 550 : 380, z: window.innerWidth < 768 ? 1200 : 850 }, 2500).easing(TWEEN.Easing.Cubic.InOut).start();
+        new TWEEN.Tween(camera.position).to({ x: 0, y: window.innerWidth < 768 ? 450 : 380, z: window.innerWidth < 768 ? 950 : 850 }, 2500).easing(TWEEN.Easing.Cubic.InOut).start();
         new TWEEN.Tween(controls.target).to({ x: 0, y: 0, z: 0 }, 2500).easing(TWEEN.Easing.Cubic.InOut)
             .onComplete(() => { while(clusterGroup.children.length > 0) clusterGroup.remove(clusterGroup.children[0]); }).start();
     }
@@ -721,7 +720,24 @@ function handlePointerMove(clientX, clientY) {
     }
 }
 
-window.addEventListener('mousemove', (e) => handlePointerMove(e.clientX, e.clientY));
+// DRAG VS CLICK DETECTION (Critical Fix for Mobile)
+let isDragging = false;
+controls.addEventListener('change', () => { isDragging = true; });
+
+function handlePointerDown() {
+    isDragging = false; 
+}
+
+function handlePointerUp(clientX, clientY) {
+    if (!isDragging) { 
+        handleNodeInteraction(clientX, clientY);
+    }
+}
+
+// Bind to Universal Pointer Events
+window.addEventListener('pointerdown', handlePointerDown);
+window.addEventListener('pointerup', (e) => handlePointerUp(e.clientX, e.clientY));
+window.addEventListener('pointermove', (e) => handlePointerMove(e.clientX, e.clientY));
 
 function handleNodeInteraction(clientX, clientY) {
     mouse.x = (clientX / window.innerWidth) * 2 - 1;
@@ -766,13 +782,6 @@ function handleNodeInteraction(clientX, clientY) {
     }
 }
 
-window.addEventListener('click', (e) => handleNodeInteraction(e.clientX, e.clientY));
-window.addEventListener('touchstart', (e) => {
-    if(e.touches.length > 0 && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'A') {
-        handlePointerMove(e.touches[0].clientX, e.touches[0].clientY);
-    }
-}, {passive: true});
-
 function handleEnter(e) { if (e.key === "Enter") explore(); }
 
 function animate() {
@@ -799,7 +808,7 @@ function animate() {
     raycaster.setFromCamera(mouse, camera);
     const intersects = raycaster.intersectObjects(interactableNodes, true);
     
-    if (intersects.length > 0 && window.innerWidth > 768) { // Hover logic mostly for Desktop
+    if (intersects.length > 0 && window.innerWidth > 768) { 
         let obj = intersects[0].object;
         while(obj && !obj.userData.title) obj = obj.parent;
         
@@ -837,8 +846,6 @@ window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
-    
-    // Refresh stars sizing on resize
     bgStars.material.size = window.innerWidth < 768 ? 1.5 : 2.5;
 });
 </script>

@@ -17,7 +17,6 @@
             pointer-events: none; transition: opacity 0.2s; 
         }
         
-        /* --- NEW: STAR LABELS --- */
         .paper-label {
             position: absolute; transform: translate(0, -50%);
             font-family: 'Segoe UI', Tahoma, sans-serif;
@@ -26,7 +25,6 @@
             text-shadow: 0 2px 5px rgba(0,0,0,0.9), 0 1px 2px rgba(0,0,0,1);
             white-space: nowrap; letter-spacing: 0.5px;
         }
-        /* ------------------------ */
 
         #hero-interface { 
             position: absolute; inset: 0; z-index: 10; display: flex; flex-direction: column; 
@@ -439,10 +437,11 @@ function diveIntoGalaxy(galaxyData) {
     sidePanel.classList.remove('active');
     tooltip.style.display = "none";
 
+    universeGroup.visible = false; 
+
     while(clusterGroup.children.length > 0) clusterGroup.remove(clusterGroup.children[0]);
     interactableNodes = [];
 
-    // --- Clean up old paper labels just in case ---
     document.querySelectorAll('.paper-label').forEach(el => el.remove());
 
     const papers = galaxyData.papers;
@@ -451,7 +450,6 @@ function diveIntoGalaxy(galaxyData) {
     const maxYear = validYears.length ? Math.max(...validYears) : new Date().getFullYear();
     const maxCites = Math.max(...papers.map(p => p.citations), 1);
 
-    // Identify the top 15 most cited papers to attach floating names to
     const topPapers = [...papers].sort((a,b) => b.citations - a.citations).slice(0, 15);
 
     systemLight.color.setHex(galaxyData.colorHex);
@@ -496,12 +494,11 @@ function diveIntoGalaxy(galaxyData) {
         const nodeHitbox = new THREE.Mesh(new THREE.SphereGeometry(nodeHitRadius, 8, 8), new THREE.MeshBasicMaterial({ visible: false }));
         nodeGroup.add(nodeHitbox);
 
-        // --- NEW: Create tiny floating label for top papers ---
         let paperLabel = null;
         if (topPapers.includes(paper) && primaryAuthor !== "Unknown Author") {
             paperLabel = document.createElement('div');
             paperLabel.className = 'paper-label';
-            const shortAuthor = primaryAuthor.split(' ').pop(); // Get last name
+            const shortAuthor = primaryAuthor.split(' ').pop(); 
             const shortYear = year ? `'${year.toString().slice(-2)}` : '';
             paperLabel.innerHTML = `<span style="color:${galaxyData.colorStr}">${shortAuthor}</span> ${shortYear}`;
             document.getElementById('labels-container').appendChild(paperLabel);
@@ -514,7 +511,7 @@ function diveIntoGalaxy(galaxyData) {
              url: paper.doi ? "https://doi.org/" + paper.doi : `https://scholar.google.com/scholar?q=${encodeURIComponent(paper.title)}`, 
              concept: galaxyData.title, colorStr: galaxyData.colorStr, 
              author: primaryAuthor, sources: paper.sources,
-             labelEl: paperLabel // Store reference to the label
+             labelEl: paperLabel 
          };
 
         clusterGroup.add(nodeGroup);
@@ -522,7 +519,6 @@ function diveIntoGalaxy(galaxyData) {
         clusterNodes.push(nodeGroup);
     });
 
-    // --- NEW: Intentional Constellation Connections ---
     const lineMat = new THREE.LineBasicMaterial({ color: galaxyData.colorHex, transparent: true, opacity: 0.25, blending: THREE.AdditiveBlending });
     for(let i = 0; i < clusterNodes.length; i++) {
         let localConnections = 0;
@@ -530,7 +526,6 @@ function diveIntoGalaxy(galaxyData) {
             const dist = clusterNodes[i].position.distanceTo(clusterNodes[j].position);
             const sameAuthor = papers[i].authors[0] && papers[i].authors[0] === papers[j].authors[0];
             
-            // Draw a line if they share an author OR if they are very close in proximity (max 2 proximity lines per node to avoid a giant mess)
             if (sameAuthor || (dist < 85 && localConnections < 2)) {
                 const geo = new THREE.BufferGeometry().setFromPoints([clusterNodes[i].position, clusterNodes[j].position]);
                 clusterGroup.add(new THREE.Line(geo, lineMat));
@@ -540,7 +535,7 @@ function diveIntoGalaxy(galaxyData) {
     }
 
     new TWEEN.Tween(camera.position).to({ x: galaxyData.coords.x + (isMobile ? 240 : 150), y: galaxyData.coords.y + 140, z: galaxyData.coords.z + (isMobile ? 620 : 400) }, 2300).easing(TWEEN.Easing.Cubic.InOut).start();
-    new TWEEN.Tween(controls.target).to(galaxyData.coords, 2300).easing(TWEEN.Easing.Cubic.InOut).onComplete(() => { universeGroup.visible = false; }).start();
+    new TWEEN.Tween(controls.target).to(galaxyData.coords, 2300).easing(TWEEN.Easing.Cubic.InOut).start();
 }
 
 function zoomOutToUniverse(animate = true) {
@@ -558,7 +553,6 @@ function zoomOutToUniverse(animate = true) {
         tooltip.style.display = "none";
     }
 
-    // --- NEW: Remove paper labels to clean up the universe view ---
     document.querySelectorAll('.paper-label').forEach(el => el.remove());
 
     if (animate) {
@@ -628,7 +622,7 @@ function handleNodeInteraction(clientX, clientY) {
 
 function handleEnter(e) { if (e.key === "Enter") explore(); }
 
-const vectorForLabels = new THREE.Vector3(); // Reusable vector to save memory in the animation loop
+const vectorForLabels = new THREE.Vector3(); 
 
 function animate() {
     requestAnimationFrame(animate);
@@ -655,10 +649,8 @@ function animate() {
     } else if (currentState === 'CLUSTER') {
         clusterGroup.rotation.y += 0.0004;
 
-        // --- NEW: Track and render paper labels during cluster rotation ---
         clusterGroup.children.forEach(child => {
             if (child.userData && !child.userData.isGalaxy && child.userData.labelEl) {
-                // Get the absolute 3D world position (accounting for the cluster's rotation)
                 child.getWorldPosition(vectorForLabels);
                 vectorForLabels.project(camera);
                 
@@ -668,7 +660,6 @@ function animate() {
                     const x = (vectorForLabels.x * 0.5 + 0.5) * window.innerWidth;
                     const y = (-(vectorForLabels.y * 0.5) + 0.5) * window.innerHeight;
                     child.userData.labelEl.style.display = 'block';
-                    // Position label slightly to the right of the star
                     child.userData.labelEl.style.left = `${x + 20}px`;
                     child.userData.labelEl.style.top = `${y}px`;
                 }

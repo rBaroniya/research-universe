@@ -9,7 +9,6 @@
         body { margin: 0; overflow: hidden; background: #010308; color: white; font-family: 'Segoe UI', Tahoma, sans-serif; touch-action: none; }
         #canvas-container { position: fixed; inset: 0; z-index: 1; }
         
-        /* --- NEW: FLOATING LABELS CONTAINER --- */
         #labels-container { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
         .galaxy-label { 
             position: absolute; transform: translate(-50%, -50%); text-align: center; 
@@ -17,7 +16,6 @@
             font-size: clamp(12px, 2.5vw, 15px); text-shadow: 0 4px 15px rgba(0,0,0,0.9), 0 1px 3px rgba(0,0,0,1); 
             pointer-events: none; transition: opacity 0.2s; 
         }
-        /* -------------------------------------- */
 
         #hero-interface { 
             position: absolute; inset: 0; z-index: 10; display: flex; flex-direction: column; 
@@ -531,41 +529,33 @@ function zoomOutToUniverse(animate = true) {
     }
 }
 
-// Interaction
+// ==========================================
+// NEW REWRITTEN INTERACTION LOGIC
+// ==========================================
+
 function handlePointerMove(clientX, clientY) {
     mouse.x = (clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(clientY / window.innerHeight) * 2 + 1;
 }
 
-let isDragging = false;
-controls.addEventListener('change', () => { isDragging = true; });
-function handlePointerDown() { isDragging = false; }
-
-function handlePointerUp(clientX, clientY) {
-    if (!isDragging) handleNodeInteraction(clientX, clientY);
-}
-
-window.addEventListener('pointerdown', handlePointerDown);
-window.addEventListener('pointerup', e => handlePointerUp(e.clientX, e.clientY));
 window.addEventListener('pointermove', e => handlePointerMove(e.clientX, e.clientY));
 
-let touchStartX = 0, touchStartY = 0;
-window.addEventListener('touchstart', e => {
-    if (e.touches.length === 1) {
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
-        handlePointerDown();
-    }
-}, { passive: true });
+let clickStartX = 0, clickStartY = 0;
 
-window.addEventListener('touchend', e => {
-    if (e.changedTouches.length === 1) {
-        const touch = e.changedTouches[0];
-        if (Math.abs(touch.clientX - touchStartX) < 15 && Math.abs(touch.clientY - touchStartY) < 15) {
-            handleNodeInteraction(touch.clientX, touch.clientY);
-        }
-    }
-}, { passive: true });
+window.addEventListener('pointerdown', e => {
+    clickStartX = e.clientX;
+    clickStartY = e.clientY;
+});
+
+window.addEventListener('pointerup', e => {
+    // 1. Prevent 3D raycasting if the user dragged the screen (camera rotation check)
+    if (Math.abs(e.clientX - clickStartX) > 10 || Math.abs(e.clientY - clickStartY) > 10) return;
+    
+    // 2. Prevent 3D raycasting if the user clicked on a UI element (like buttons or the side panel)
+    if (e.target.closest('button') || e.target.closest('#sidePanel') || e.target.closest('.search-wrapper')) return;
+
+    handleNodeInteraction(e.clientX, e.clientY);
+});
 
 function handleNodeInteraction(clientX, clientY) {
     mouse.x = (clientX / window.innerWidth) * 2 - 1;

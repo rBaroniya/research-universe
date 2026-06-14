@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Research Universe: Multi-Scale Explorer</title>
     <style>
+        /* Global box-sizing ensures padding doesn't blow out widths on mobile */
+        * {
+            box-sizing: border-box;
+        }
+
         body { margin: 0; overflow: hidden; background: #010308; color: white; font-family: 'Segoe UI', Tahoma, sans-serif; touch-action: none; }
         #canvas-container { position: fixed; inset: 0; z-index: 1; }
         
@@ -19,7 +24,9 @@
             justify-content: center;
             background: radial-gradient(circle at center, rgba(1, 3, 8, 0.6) 0%, #010308 90%);
             transition: opacity 1s ease-in-out;
-            padding: 20px;
+            /* Safe area insets prevent overlap with iOS notch and status bar */
+            padding: max(40px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom)) 20px;
+            overflow-y: auto; 
         }
 
         .hero-content {
@@ -59,6 +66,7 @@
             margin: 0 auto 40px auto;
             width: 100%;
             max-width: 550px;
+            padding: 0 10px;
         }
 
         .search {
@@ -79,9 +87,10 @@
             border: none;
             background: rgba(10, 15, 30, 0.9);
             color: white;
-            font-size: 16px;
             outline: none;
             width: 100%;
+            /* 16px font size is critical to prevent iOS Safari from auto-zooming on tap */
+            font-size: 16px !important; 
         }
 
         button.action-btn {
@@ -343,7 +352,10 @@ const container = document.getElementById('canvas-container');
 const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x010308, 0.0012);
 const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 10000);
-camera.position.set(0, 500, 1200);
+
+// Adjusted to keep desktop "zoomed in" like the original version, but scale out for mobile
+camera.position.set(0, window.innerWidth < 768 ? 500 : 380, window.innerWidth < 768 ? 1200 : 850);
+
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -571,6 +583,7 @@ async function explore() {
             interactableNodes.push(hitbox);
         });
 
+        // Set camera target back to original "zoomed in" values on desktop, kept adapted for mobile
         new TWEEN.Tween(camera.position).to({ x: 0, y: window.innerWidth < 768 ? 550 : 380, z: window.innerWidth < 768 ? 1200 : 850 }, 2800).easing(TWEEN.Easing.Cubic.Out).start();
         new TWEEN.Tween(controls.target).to({ x: 0, y: 0, z: 0 }, 2800).easing(TWEEN.Easing.Cubic.Out).start();
     } catch (e) { 

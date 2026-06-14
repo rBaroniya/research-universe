@@ -8,6 +8,7 @@
         * { box-sizing: border-box; }
         body { margin: 0; overflow: hidden; background: #010308; color: white; font-family: 'Segoe UI', Tahoma, sans-serif; touch-action: none; }
         #canvas-container { position: fixed; inset: 0; z-index: 1; }
+        
         #hero-interface { 
             position: absolute; inset: 0; z-index: 10; display: flex; flex-direction: column; 
             align-items: center; justify-content: center; 
@@ -19,32 +20,44 @@
         .icon-container { font-size: clamp(2.5em, 5vw, 3.5em); margin-bottom: -10px; animation: float 4s ease-in-out infinite; text-shadow: 0 0 30px rgba(96, 165, 250, 0.8); }
         #hero-interface h1 { font-size: clamp(2.5em, 6vw, 4em); font-weight: 700; letter-spacing: 2px; margin: 10px 0; background: linear-gradient(to right, #ffffff, #93c5fd, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 40px rgba(59, 130, 246, 0.3); }
         .subtitle { color: #94a3b8; font-weight: 300; font-size: clamp(1em, 3vw, 1.5em); letter-spacing: 1px; margin-bottom: 40px; }
+        
         .search-wrapper { position: relative; margin: 0 auto 40px auto; width: 100%; max-width: 550px; padding: 0 10px; }
         .search { display: flex; gap: 10px; padding: 8px; background: rgba(10, 15, 30, 0.7); border: 1px solid rgba(96, 165, 250, 0.3); border-radius: 50px; box-shadow: 0 0 30px rgba(59, 130, 246, 0.15); backdrop-filter: blur(12px); }
         .search input { flex: 1; padding: 14px 24px; border-radius: 50px; border: none; background: rgba(10, 15, 30, 0.9); color: white; outline: none; font-size: 16px !important; }
+        
         button.action-btn { padding: 14px 28px; cursor: pointer; background: linear-gradient(90deg, #3b82f6, #60a5fa); color: white; border: none; border-radius: 50px; font-size: 15px; font-weight: 600; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); transition: all 0.2s; white-space: nowrap; }
         button.action-btn:hover { box-shadow: 0 8px 25px rgba(59, 130, 246, 0.6); }
+        
         .description { color: #64748b; font-size: clamp(0.9em, 2vw, 1.1em); line-height: 1.6; margin-bottom: 40px; padding: 0 15px; }
+        
         .universe-stats { display: flex; justify-content: center; align-items: center; gap: 20px; color: #475569; font-size: 0.85em; text-transform: uppercase; letter-spacing: 2px; flex-wrap: wrap; }
         .universe-stats strong { color: #e2e8f0; font-size: 1.6em; display: block; margin-bottom: 5px; }
         .divider { width: 1px; height: 40px; background: rgba(255,255,255,0.1); }
 
         @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        
         .stream-word { position: absolute; color: rgba(96, 165, 250, 0.4); font-size: 0.8em; font-weight: 600; pointer-events: none; animation: streamIn 3s linear forwards; white-space: nowrap; }
         @keyframes streamIn { 0% { opacity: 0; transform: translate(var(--startX), var(--startY)) scale(0.5); } 20% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; transform: translate(0, 0) scale(1); } }
 
         #backBtn { position: absolute; top: 20px; left: 20px; z-index: 10; display: none; background: rgba(10,15,30,0.8); backdrop-filter: blur(10px); border: 1px solid rgba(96,165,250,0.4); padding: 12px 20px; }
+        
         #loadingOverlay { display: none; position: fixed; inset: 0; background: rgba(1, 3, 8, 0.95); z-index: 60; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(8px); padding: 20px; text-align: center; }
         #loadingText { color: #60a5fa; font-family: monospace; font-size: clamp(18px, 4vw, 26px); letter-spacing: 2px; margin-top: 20px; animation: pulse 1.8s infinite; }
         .loading-subtext { color: #94a3b8; font-family: monospace; font-size: clamp(12px, 3vw, 14px); margin-top: 10px; }
         @keyframes pulse { 0%,100% {opacity:1} 50%{opacity:0.4} }
 
         #hoverTooltip { position: absolute; display: none; background: rgba(10, 15, 30, 0.96); border: 1px solid #60a5fa; border-radius: 12px; padding: 16px; z-index: 200; pointer-events: none; max-width: 280px; box-shadow: 0 15px 35px rgba(0,0,0,0.7); backdrop-filter: blur(10px); }
+        
         #sidePanel { position: absolute; background: rgba(10, 15, 30, 0.95); border: 1px solid rgba(96, 165, 250, 0.3); z-index: 100; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.8); box-sizing: border-box; backdrop-filter: blur(15px); transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        
+        /* Updated Copyright and Link Styling */
         .copyright { position: fixed; bottom: 12px; left: 12px; z-index: 70; color: rgba(148, 163, 184, 0.6); font-size: 0.75em; font-weight: 400; pointer-events: none; }
+        .copyright a { pointer-events: auto; } /* Ensures the link is clickable despite the container's pointer-events: none */
         .source-badge { display: inline-block; background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-size: 0.75em; margin-right: 5px; margin-top: 5px; border: 1px solid rgba(255,255,255,0.2); }
-        .author-link { color: #10b981; text-decoration: none; font-weight: 600; }
-        .author-link:hover { text-shadow: 0 0 10px rgba(16, 185, 129, 0.6); }
+        
+        /* Ensures the author link does not move or shift on hover */
+        .author-link { color: #10b981; text-decoration: none; font-weight: 600; transition: text-shadow 0.3s ease, color 0.3s ease; }
+        .author-link:hover { color: #34d399; text-shadow: 0 0 12px rgba(16, 185, 129, 0.8); }
 
         @media (max-width: 768px) { 
             .search { flex-direction: column; border-radius: 20px; background: rgba(10, 15, 30, 0.5); border: none; box-shadow: none; } 
@@ -67,6 +80,7 @@
 </head>
 <body>
     <div id="canvas-container"></div>
+    
     <div id="hero-interface">
         <div class="hero-content">
             <div class="icon-container">🌌</div>
@@ -91,14 +105,17 @@
     </div>
 
     <button id="backBtn" class="action-btn" onclick="zoomOutToUniverse()">⬅ UNIVERSE</button>
+    
     <div id="loadingOverlay">
         <h2 id="loadingText">SCANNING DATABASES...</h2>
         <div id="loadingSubtext" class="loading-subtext">Fetching from multiple sources...</div>
     </div>
+    
     <div id="hoverTooltip"></div>
     <div id="sidePanel"></div>
+    
     <div class="copyright"> 
-        © 2026 Research Universe created by <a href="https://rbaroniya.github.io/" target="_blank" class="author-link">Rupesh Baroniya</a> 
+         © 2026 Research Universe created by <a href="https://rbaroniya.github.io/" target="_blank" class="author-link">Rupesh Baroniya</a> 
     </div>
 
 <script>
@@ -199,7 +216,7 @@ function reconstructAbstract(inv) {
     if (!inv) return "";
     let words = [];
     Object.entries(inv).forEach(([word, pos]) => pos.forEach(p => words[p] = word));
-    return words.join(" ");
+    return words.join(" ").replace(/\s+/g, ' ').trim();
 }
 
 async function fetchOpenAlex(query) {
@@ -278,7 +295,7 @@ function mergeAndDeduplicate(allPapers) {
     return Array.from(mergedMap.values());
 }
 
-// 3D Functions (same as before)
+// 3D Functions
 function createPaperNode(citations, year, baseColor, nodeColor) {
     const group = new THREE.Group();
     const intensity = Math.min(citations / 800, 1.3);
@@ -449,13 +466,13 @@ function diveIntoGalaxy(galaxyData) {
         nodeGroup.add(nodeHitbox);
 
         nodeGroup.userData = { 
-            isGalaxy: false, title: paper.title, year: year, citations: citations, 
-            authors: paper.authors.slice(0,3).join(", ") || "Unknown", 
-            abstract: paper.abstract || "Abstract not available.", 
-            url: paper.doi ? "https://doi.org/" + paper.doi : `https://scholar.google.com/scholar?q=${encodeURIComponent(paper.title)}`, 
-            concept: galaxyData.title, colorStr: galaxyData.colorStr, 
-            author: primaryAuthor, sources: paper.sources 
-        };
+             isGalaxy: false, title: paper.title, year: year, citations: citations, 
+             authors: paper.authors.slice(0,3).join(", ") || "Unknown", 
+             abstract: paper.abstract || "Abstract not available.", 
+             url: paper.doi ? "https://doi.org/" + paper.doi : `https://scholar.google.com/scholar?q=${encodeURIComponent(paper.title)}`, 
+             concept: galaxyData.title, colorStr: galaxyData.colorStr, 
+             author: primaryAuthor, sources: paper.sources 
+         };
 
         clusterGroup.add(nodeGroup);
         interactableNodes.push(nodeGroup);

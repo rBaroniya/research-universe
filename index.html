@@ -9,6 +9,16 @@
         body { margin: 0; overflow: hidden; background: #010308; color: white; font-family: 'Segoe UI', Tahoma, sans-serif; touch-action: none; }
         #canvas-container { position: fixed; inset: 0; z-index: 1; }
         
+        /* --- NEW: FLOATING LABELS CONTAINER --- */
+        #labels-container { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
+        .galaxy-label { 
+            position: absolute; transform: translate(-50%, -50%); text-align: center; 
+            font-family: 'Segoe UI', Tahoma, sans-serif; font-weight: 600; 
+            font-size: clamp(12px, 2.5vw, 15px); text-shadow: 0 4px 15px rgba(0,0,0,0.9), 0 1px 3px rgba(0,0,0,1); 
+            pointer-events: none; transition: opacity 0.2s; 
+        }
+        /* -------------------------------------- */
+
         #hero-interface { 
             position: absolute; inset: 0; z-index: 10; display: flex; flex-direction: column; 
             align-items: center; justify-content: center; 
@@ -50,12 +60,10 @@
         
         #sidePanel { position: absolute; background: rgba(10, 15, 30, 0.95); border: 1px solid rgba(96, 165, 250, 0.3); z-index: 100; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.8); box-sizing: border-box; backdrop-filter: blur(15px); transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
         
-        /* Updated Copyright and Link Styling */
         .copyright { position: fixed; bottom: 12px; left: 12px; z-index: 70; color: rgba(148, 163, 184, 0.6); font-size: 0.75em; font-weight: 400; pointer-events: none; }
-        .copyright a { pointer-events: auto; } /* Ensures the link is clickable despite the container's pointer-events: none */
+        .copyright a { pointer-events: auto; } 
         .source-badge { display: inline-block; background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-size: 0.75em; margin-right: 5px; margin-top: 5px; border: 1px solid rgba(255,255,255,0.2); }
         
-        /* Ensures the author link does not move or shift on hover */
         .author-link { color: #10b981; text-decoration: none; font-weight: 600; transition: text-shadow 0.3s ease, color 0.3s ease; }
         .author-link:hover { color: #34d399; text-shadow: 0 0 12px rgba(16, 185, 129, 0.8); }
 
@@ -80,6 +88,7 @@
 </head>
 <body>
     <div id="canvas-container"></div>
+    <div id="labels-container"></div>
     
     <div id="hero-interface">
         <div class="hero-content">
@@ -353,6 +362,7 @@ async function explore() {
     while(universeGroup.children.length > 0) universeGroup.remove(universeGroup.children[0]);
     while(clusterGroup.children.length > 0) clusterGroup.remove(clusterGroup.children[0]);
     interactableNodes = [];
+    document.getElementById("labels-container").innerHTML = "";
 
     zoomOutToUniverse(false);
 
@@ -394,7 +404,13 @@ async function explore() {
             const hitRadius = galaxyRadius * (isMobile ? 2.1 : 1.0);
             const hitbox = new THREE.Mesh(new THREE.SphereGeometry(hitRadius, 16, 16), new THREE.MeshBasicMaterial({ visible: false }));
             hitbox.position.set(cx, cy, cz);
-            hitbox.userData = { isGalaxy: true, title: conceptName, paperCount: paperCount, colorHex: hexColor, colorStr: strColor, papers: clusterPapers, coords: {x:cx, y:cy, z:cz} };
+            
+            const label = document.createElement('div');
+            label.className = 'galaxy-label';
+            label.innerHTML = `<span style="color:${strColor}">${conceptName}</span><br><span style="font-size:0.8em; color:#94a3b8; font-weight: 400;">${paperCount} Papers</span>`;
+            document.getElementById('labels-container').appendChild(label);
+
+            hitbox.userData = { isGalaxy: true, title: conceptName, paperCount: paperCount, colorHex: hexColor, colorStr: strColor, papers: clusterPapers, coords: {x:cx, y:cy, z:cz}, labelEl: label };
 
             universeGroup.add(galaxyMesh);
             universeGroup.add(hitbox);
@@ -501,6 +517,13 @@ function zoomOutToUniverse(animate = true) {
     interactableNodes = universeGroup.children.filter(c => c.userData && c.userData.isGalaxy);
     systemLight.intensity = 0;
 
+    mouse.x = -2; mouse.y = -2; 
+    if (hoveredNode) {
+        if (!hoveredNode.userData.isGalaxy) hoveredNode.scale.setScalar(1);
+        hoveredNode = null;
+        tooltip.style.display = "none";
+    }
+
     if (animate) {
         new TWEEN.Tween(camera.position).to({ x: 0, y: isMobile ? 520 : 380, z: isMobile ? 1050 : 850 }, 2500).easing(TWEEN.Easing.Cubic.InOut).start();
         new TWEEN.Tween(controls.target).to({ x: 0, y: 0, z: 0 }, 2500).easing(TWEEN.Easing.Cubic.InOut)
@@ -587,8 +610,27 @@ function animate() {
     requestAnimationFrame(animate);
 
     if(currentState === 'UNIVERSE') {
-        universeGroup.children.forEach(child => { if (child.type === "Points") child.rotation.y += 0.0008; });
+        document.getElementById('labels-container').style.display = 'block';
+        universeGroup.children.forEach(child => { 
+            if (child.type === "Points") child.rotation.y += 0.0008; 
+            
+            if (child.userData && child.userData.isGalaxy && child.userData.labelEl) {
+                const vector = child.position.clone();
+                vector.project(camera);
+                
+                if (vector.z > 1) { 
+                    child.userData.labelEl.style.display = 'none';
+                } else {
+                    const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
+                    const y = (-(vector.y * 0.5) + 0.5) * window.innerHeight;
+                    child.userData.labelEl.style.display = 'block';
+                    child.userData.labelEl.style.left = `${x}px`;
+                    child.userData.labelEl.style.top = `${y + (isMobile ? 70 : 100)}px`;
+                }
+            }
+        });
     } else if (currentState === 'CLUSTER') {
+        document.getElementById('labels-container').style.display = 'none'; 
         clusterGroup.rotation.y += 0.0004;
     }
 

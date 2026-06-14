@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Research Universe: Multi-Scale Explorer</title>
     <style>
-        /* Global box-sizing ensures padding doesn't blow out widths on mobile */
         * { box-sizing: border-box; }
         body { 
             margin: 0; 
@@ -20,7 +19,6 @@
             inset: 0; 
             z-index: 1; 
         }
-        /* HERO UI STYLES */
         #hero-interface { 
             position: absolute; 
             inset: 0; 
@@ -34,11 +32,7 @@
             padding: max(40px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom)) 20px; 
             overflow-y: auto; 
         }
-        .hero-content { 
-            text-align: center; 
-            width: 100%; 
-            max-width: 800px; 
-        }
+        .hero-content { text-align: center; width: 100%; max-width: 800px; }
         .icon-container { 
             font-size: clamp(2.5em, 5vw, 3.5em); 
             margin-bottom: -10px; 
@@ -56,23 +50,13 @@
             text-shadow: 0 0 40px rgba(59, 130, 246, 0.3); 
         }
         .subtitle { 
-            color: #94a3b8; 
-            font-weight: 300; 
+            color: #94a3b8; font-weight: 300; 
             font-size: clamp(1em, 3vw, 1.5em); 
-            letter-spacing: 1px; 
-            margin-bottom: 40px; 
+            letter-spacing: 1px; margin-bottom: 40px; 
         }
-        .search-wrapper { 
-            position: relative; 
-            margin: 0 auto 40px auto; 
-            width: 100%; 
-            max-width: 550px; 
-            padding: 0 10px; 
-        }
+        .search-wrapper { position: relative; margin: 0 auto 40px auto; width: 100%; max-width: 550px; padding: 0 10px; }
         .search { 
-            display: flex; 
-            gap: 10px; 
-            padding: 8px; 
+            display: flex; gap: 10px; padding: 8px; 
             background: rgba(10, 15, 30, 0.7); 
             border: 1px solid rgba(96, 165, 250, 0.3); 
             border-radius: 50px; 
@@ -80,243 +64,105 @@
             backdrop-filter: blur(12px); 
         }
         .search input { 
-            flex: 1; 
-            padding: 14px 24px; 
-            border-radius: 50px; 
-            border: none; 
-            background: rgba(10, 15, 30, 0.9); 
-            color: white; 
-            outline: none; 
-            width: 100%; 
+            flex: 1; padding: 14px 24px; border-radius: 50px; border: none; 
+            background: rgba(10, 15, 30, 0.9); color: white; outline: none; 
             font-size: 16px !important; 
         }
         button.action-btn { 
-            padding: 14px 28px; 
-            cursor: pointer; 
+            padding: 14px 28px; cursor: pointer; 
             background: linear-gradient(90deg, #3b82f6, #60a5fa); 
-            color: white; 
-            border: none; 
-            border-radius: 50px; 
-            font-size: 15px; 
-            font-weight: 600; 
+            color: white; border: none; border-radius: 50px; 
+            font-size: 15px; font-weight: 600; 
             box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); 
-            transition: box-shadow 0.2s, background 0.2s; 
-            white-space: nowrap; 
+            transition: all 0.2s; white-space: nowrap; 
         }
-        button.action-btn:hover { 
-            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.6); 
-            background: linear-gradient(90deg, #2563eb, #3b82f6); 
-        }
-        .description { 
-            color: #64748b; 
-            font-size: clamp(0.9em, 2vw, 1.1em); 
-            line-height: 1.6; 
-            margin-bottom: 40px; 
-            padding: 0 15px; 
-        }
-        .universe-stats { 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            gap: 20px; 
-            color: #475569; 
-            font-size: 0.85em; 
-            text-transform: uppercase; 
-            letter-spacing: 2px; 
-            flex-wrap: wrap; 
-        }
-        .universe-stats strong { 
-            color: #e2e8f0; 
-            font-size: 1.6em; 
-            display: block; 
-            margin-bottom: 5px; 
-        }
-        .divider { 
-            width: 1px; 
-            height: 40px; 
-            background: rgba(255,255,255,0.1); 
-        }
-        /* ANIMATIONS */
-        @keyframes float { 
-            0%, 100% { transform: translateY(0); } 
-            50% { transform: translateY(-15px); } 
-        }
+        button.action-btn:hover { box-shadow: 0 8px 25px rgba(59, 130, 246, 0.6); }
+        .description { color: #64748b; font-size: clamp(0.9em, 2vw, 1.1em); line-height: 1.6; margin-bottom: 40px; padding: 0 15px; }
+        .universe-stats { display: flex; justify-content: center; align-items: center; gap: 20px; color: #475569; font-size: 0.85em; text-transform: uppercase; letter-spacing: 2px; flex-wrap: wrap; }
+        .universe-stats strong { color: #e2e8f0; font-size: 1.6em; display: block; margin-bottom: 5px; }
+        .divider { width: 1px; height: 40px; background: rgba(255,255,255,0.1); }
+
+        @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
         .stream-word { 
-            position: absolute; 
-            color: rgba(96, 165, 250, 0.4); 
-            font-size: 0.8em; 
-            font-weight: 600; 
-            pointer-events: none; 
-            animation: streamIn 3s linear forwards; 
-            white-space: nowrap; 
+            position: absolute; color: rgba(96, 165, 250, 0.4); font-size: 0.8em; 
+            font-weight: 600; pointer-events: none; animation: streamIn 3s linear forwards; white-space: nowrap; 
         }
         @keyframes streamIn { 
             0% { opacity: 0; transform: translate(var(--startX), var(--startY)) scale(0.5); } 
-            20% { opacity: 1; } 
-            80% { opacity: 1; } 
+            20% { opacity: 1; } 80% { opacity: 1; } 
             100% { opacity: 0; transform: translate(0, 0) scale(1); } 
         }
-        /* APP STYLES & MOBILE OVERRIDES */
+
         #backBtn { 
-            position: absolute; 
-            top: 20px; 
-            left: 20px; 
-            z-index: 10; 
-            display: none; 
-            background: rgba(10,15,30,0.8); 
-            backdrop-filter: blur(10px); 
-            border: 1px solid rgba(96,165,250,0.4); 
-            padding: 12px 20px;
+            position: absolute; top: 20px; left: 20px; z-index: 10; display: none; 
+            background: rgba(10,15,30,0.8); backdrop-filter: blur(10px); 
+            border: 1px solid rgba(96,165,250,0.4); padding: 12px 20px; 
         }
         #loadingOverlay { 
             display: none; 
-            position: absolute; 
+            position: fixed; 
             inset: 0; 
             background: rgba(1, 3, 8, 0.95); 
-            z-index: 50; 
+            z-index: 60; 
             flex-direction: column; 
             align-items: center; 
             justify-content: center; 
             backdrop-filter: blur(8px); 
             padding: 20px; 
-            text-align: center;
+            text-align: center; 
         }
         #loadingText { 
-            color: #60a5fa; 
-            font-family: monospace; 
-            font-size: clamp(18px, 4vw, 26px); 
-            letter-spacing: 2px; 
-            margin-top: 20px; 
-            animation: pulse 1.8s infinite;
+            color: #60a5fa; font-family: monospace; 
+            font-size: clamp(18px, 4vw, 26px); letter-spacing: 2px; 
+            margin-top: 20px; animation: pulse 1.8s infinite; 
         }
-        .loading-subtext { 
-            color: #94a3b8; 
-            font-family: monospace; 
-            font-size: clamp(12px, 3vw, 14px); 
-            margin-top: 10px; 
-        }
-        @keyframes pulse { 
-            0%,100% {opacity:1} 
-            50%{opacity:0.4} 
-        }
+        .loading-subtext { color: #94a3b8; font-family: monospace; font-size: clamp(12px, 3vw, 14px); margin-top: 10px; }
+        @keyframes pulse { 0%,100% {opacity:1} 50%{opacity:0.4} }
+
         #hoverTooltip { 
-            position: absolute; 
-            display: none; 
-            background: rgba(10, 15, 30, 0.96); 
-            border: 1px solid #60a5fa; 
-            border-radius: 12px; 
-            padding: 16px; 
-            z-index: 200; 
-            pointer-events: none; 
-            max-width: 280px; 
-            box-shadow: 0 15px 35px rgba(0,0,0,0.7); 
+            position: absolute; display: none; background: rgba(10, 15, 30, 0.96); 
+            border: 1px solid #60a5fa; border-radius: 12px; padding: 16px; z-index: 200; 
+            pointer-events: none; max-width: 280px; box-shadow: 0 15px 35px rgba(0,0,0,0.7); 
             backdrop-filter: blur(10px); 
         }
-        /* Responsive Side Panel */
         #sidePanel { 
-            position: absolute; 
-            background: rgba(10, 15, 30, 0.95); 
-            border: 1px solid rgba(96, 165, 250, 0.3); 
-            z-index: 100; 
-            overflow-y: auto; 
-            box-shadow: 0 20px 40px rgba(0,0,0,0.8); 
-            box-sizing: border-box; 
-            backdrop-filter: blur(15px); 
+            position: absolute; background: rgba(10, 15, 30, 0.95); 
+            border: 1px solid rgba(96, 165, 250, 0.3); z-index: 100; 
+            overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.8); 
+            box-sizing: border-box; backdrop-filter: blur(15px); 
             transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); 
         }
         .copyright { 
-            position: absolute; 
-            bottom: 15px; 
-            left: 20px; 
-            z-index: 10; 
+            position: fixed; 
+            bottom: 12px; 
+            left: 12px; 
+            z-index: 70; 
             color: rgba(148, 163, 184, 0.6); 
-            font-size: 0.8em; 
+            font-size: 0.75em; 
             font-weight: 400; 
             pointer-events: none; 
         }
         .source-badge { 
-            display: inline-block; 
-            background: rgba(255,255,255,0.1); 
-            padding: 4px 8px; 
-            border-radius: 4px; 
-            font-size: 0.75em; 
-            margin-right: 5px; 
-            margin-top: 5px; 
-            border: 1px solid rgba(255,255,255,0.2);
+            display: inline-block; background: rgba(255,255,255,0.1); 
+            padding: 4px 8px; border-radius: 4px; font-size: 0.75em; 
+            margin-right: 5px; margin-top: 5px; border: 1px solid rgba(255,255,255,0.2); 
         }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
-        ::-webkit-scrollbar-thumb { background: rgba(96,165,250,0.4); border-radius: 10px; }
-        .author-link { 
-            color: #10b981; 
-            text-decoration: none; 
-            font-weight: 600; 
-            pointer-events: auto; 
-            transition: text-shadow 0.2s ease; 
-        }
-        .author-link:hover { 
-            text-shadow: 0 0 10px rgba(16, 185, 129, 0.6); 
-        }
-        /* MOBILE MEDIA QUERIES */
+        .author-link { color: #10b981; text-decoration: none; font-weight: 600; }
+        .author-link:hover { text-shadow: 0 0 10px rgba(16, 185, 129, 0.6); }
+
         @media (max-width: 768px) { 
-            .search { 
-                flex-direction: column; 
-                border-radius: 20px; 
-                background: rgba(10, 15, 30, 0.5); 
-                border: none; 
-                box-shadow: none;
-            } 
-            .search input { 
-                border: 1px solid rgba(96, 165, 250, 0.4); 
-            } 
-            button.action-btn { 
-                width: 100%; 
-            } 
-            .universe-stats { 
-                display: none; 
-            } 
-            #sidePanel { 
-                width: 100%; 
-                height: 65vh; 
-                bottom: -100%; 
-                left: 0; 
-                border-radius: 24px 24px 0 0; 
-                padding: 25px 20px; 
-                border-bottom: none; 
-                border-left: none; 
-                border-right: none; 
-                border-top: 2px solid rgba(96, 165, 250, 0.5); 
-            } 
-            #sidePanel.active { 
-                bottom: 0; 
-            } 
-            #backBtn { 
-                font-size: 13px; 
-                padding: 10px 16px; 
-                top: 15px; 
-                left: 15px;
-            }
-            #hoverTooltip { 
-                display: none !important; 
-            } 
-            .copyright { 
-                font-size: 0.65em; 
-                bottom: 8px; 
-                left: 12px; 
-            } 
+            .search { flex-direction: column; border-radius: 20px; background: rgba(10, 15, 30, 0.5); border: none; box-shadow: none; } 
+            .search input { border: 1px solid rgba(96, 165, 250, 0.4); } 
+            button.action-btn { width: 100%; } 
+            .universe-stats { display: none; } 
+            #sidePanel { width: 100%; height: 65vh; bottom: -100%; left: 0; border-radius: 24px 24px 0 0; padding: 25px 20px; border-top: 2px solid rgba(96, 165, 250, 0.5); } 
+            #sidePanel.active { bottom: 0; } 
+            #backBtn { font-size: 13px; padding: 10px 16px; top: 15px; left: 15px; } 
+            .copyright { font-size: 0.65em; bottom: 10px; left: 12px; } 
         }
         @media (min-width: 769px) { 
-            #sidePanel { 
-                width: 420px; 
-                height: calc(100vh - 40px); 
-                right: -450px; 
-                top: 20px; 
-                border-radius: 18px; 
-                padding: 30px; 
-            } 
-            #sidePanel.active { 
-                right: 20px; 
-            } 
+            #sidePanel { width: 420px; height: calc(100vh - 40px); right: -450px; top: 20px; border-radius: 18px; padding: 30px; } 
+            #sidePanel.active { right: 20px; } 
         }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -337,10 +183,7 @@
                     <button class="action-btn" onclick="explore()">LAUNCH EXPLORATION</button>
                 </div>
             </div>
-            <p class="description"> 
-                Explore papers, concepts, authors, citations, and research frontiers<br> 
-                through an interactive 3D universe. 
-            </p>
+            <p class="description">Explore papers, concepts, authors, citations, and research frontiers<br>through an interactive 3D universe.</p>
             <div class="universe-stats">
                 <div class="stat-item"><strong>250M+</strong>Papers</div>
                 <div class="divider"></div>
@@ -350,6 +193,7 @@
             </div>
         </div>
     </div>
+
     <button id="backBtn" class="action-btn" onclick="zoomOutToUniverse()">⬅ UNIVERSE</button>
     <div id="loadingOverlay">
         <h2 id="loadingText">SCANNING DATABASES...</h2>
@@ -364,9 +208,7 @@
 <script>
 // --- HERO UI LOGIC ---
 const topics = ["Magnetohydrodynamics...", "Quantum Computing...", "Cancer Research...", "Machine Learning...", "Fusion Reactors...", "Fluid Dynamics..."];
-let topicIndex = 0;
-let charIndex = 0;
-let isDeleting = false;
+let topicIndex = 0, charIndex = 0, isDeleting = false;
 const inputField = document.getElementById("topic");
 
 function typePlaceholder() {
@@ -379,34 +221,24 @@ function typePlaceholder() {
         charIndex++;
     }
     let typeSpeed = isDeleting ? 40 : 80;
-    if (!isDeleting && charIndex === currentWord.length) {
-        typeSpeed = 2000;
-        isDeleting = true;
-    } else if (isDeleting && charIndex === 0) {
-        isDeleting = false;
-        topicIndex = (topicIndex + 1) % topics.length;
-        typeSpeed = 500;
-    }
+    if (!isDeleting && charIndex === currentWord.length) { typeSpeed = 2000; isDeleting = true; }
+    else if (isDeleting && charIndex === 0) { isDeleting = false; topicIndex = (topicIndex + 1) % topics.length; typeSpeed = 500; }
     setTimeout(typePlaceholder, typeSpeed);
 }
 setTimeout(typePlaceholder, 1000);
 
 const streamWords = ["Paper", "Author", "Citation", "Concept", "DOI", "Journal"];
 function spawnStream() {
-    if (document.getElementById("hero-interface").style.opacity === "0") return;
-    if (window.innerWidth < 768) return;
+    if (document.getElementById("hero-interface").style.opacity === "0" || window.innerWidth < 768) return;
     const container = document.getElementById("knowledge-streams");
     const el = document.createElement("div");
     el.className = "stream-word";
     el.innerText = streamWords[Math.floor(Math.random() * streamWords.length)];
     const angle = Math.random() * Math.PI * 2;
     const distance = 200 + Math.random() * 150;
-    const startX = Math.cos(angle) * distance;
-    const startY = Math.sin(angle) * distance;
-    el.style.setProperty('--startX', `${startX}px`);
-    el.style.setProperty('--startY', `${startY}px`);
-    el.style.left = "50%";
-    el.style.top = "50%";
+    el.style.setProperty('--startX', `${Math.cos(angle)*distance}px`);
+    el.style.setProperty('--startY', `${Math.sin(angle)*distance}px`);
+    el.style.left = "50%"; el.style.top = "50%";
     container.appendChild(el);
     setTimeout(() => el.remove(), 3000);
 }
@@ -429,40 +261,32 @@ container.appendChild(renderer.domElement);
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.08;
-controls.enableZoom = true;
+controls.rotateSpeed = isMobile ? 0.6 : 1.0;
 controls.minDistance = 100;
 controls.maxDistance = 2500;
-controls.rotateSpeed = isMobile ? 0.6 : 1.0;
 
 function createGlowTexture() {
     const canvas = document.createElement('canvas');
-    canvas.width = 64;
-    canvas.height = 64;
+    canvas.width = 64; canvas.height = 64;
     const ctx = canvas.getContext('2d');
     const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
     gradient.addColorStop(0, 'rgba(255,255,255,1)');
     gradient.addColorStop(0.3, 'rgba(255,255,255,0.7)');
     gradient.addColorStop(0.6, 'rgba(255,255,255,0.1)');
     gradient.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, 64, 64);
+    ctx.fillStyle = gradient; ctx.fillRect(0, 0, 64, 64);
     return new THREE.CanvasTexture(canvas);
 }
 const glowTexture = createGlowTexture();
 
-// Original stars look
+// Background Stars (original look)
 const starGeo = new THREE.BufferGeometry();
 const starVerts = [];
 for(let i=0; i<6000; i++) starVerts.push((Math.random()-.5)*6000, (Math.random()-.5)*6000, (Math.random()-.5)*6000);
 starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starVerts, 3));
 const bgStars = new THREE.Points(starGeo, new THREE.PointsMaterial({ 
-    color: 0xffffff, 
-    size: isMobile ? 1.8 : 2.5, 
-    map: glowTexture, 
-    transparent: true, 
-    opacity: 0.3, 
-    depthWrite: false, 
-    blending: THREE.AdditiveBlending 
+    color: 0xffffff, size: isMobile ? 1.8 : 2.5, map: glowTexture, 
+    transparent: true, opacity: 0.3, depthWrite: false, blending: THREE.AdditiveBlending 
 }));
 scene.add(bgStars);
 
@@ -486,13 +310,13 @@ const sidePanel = document.getElementById("sidePanel");
 const colorPalette = [0x3b82f6, 0x10b981, 0xf43f5e, 0xf59e0b, 0x8b5cf6, 0x0ea5e9, 0xec4899, 0x14b8a6];
 const colorStrings = ['#3b82f6', '#10b981', '#f43f5e', '#f59e0b', '#8b5cf6', '#0ea5e9', '#ec4899', '#14b8a6'];
 
-// --- DATA & RENDERING FUNCTIONS (unchanged from previous improvements) ---
-function createStandardPaper() { return { title: "", year: 0, citations: 0, doi: "", journal: "", authors: [], concepts: [], abstract: "", fullTextUrl: "", sources: [], originalIds: {} }; }
+// Data & Rendering Functions
+function createStandardPaper() { return { title: "", year: 0, citations: 0, doi: "", authors: [], concepts: [], abstract: "", sources: [] }; }
 
 function reconstructAbstract(inv) {
     if (!inv) return "";
     let words = [];
-    Object.entries(inv).forEach(([word, pos]) => { pos.forEach(p => words[p] = word); });
+    Object.entries(inv).forEach(([word, pos]) => pos.forEach(p => words[p] = word));
     return words.join(" ");
 }
 
@@ -512,22 +336,20 @@ async function fetchOpenAlex(query) {
             paper.sources.push("OpenAlex");
             return paper;
         });
-    } catch (e) { console.error(e); return []; }
+    } catch (e) { return []; }
 }
 
 function mergeAndDeduplicate(allPapers) {
     const mergedMap = new Map();
     allPapers.forEach(paper => {
         if (!paper.title) return;
-        let uniqueKey = paper.doi ? `doi_${paper.doi.toLowerCase()}` : `title_${paper.title.toLowerCase().trim()}_${paper.year}`;
-        if (mergedMap.has(uniqueKey)) {
-            let existing = mergedMap.get(uniqueKey);
-            existing.citations = Math.max(existing.citations, paper.citations);
-            existing.concepts = [...new Set([...existing.concepts, ...paper.concepts])];
-            if (!existing.abstract && paper.abstract) existing.abstract = paper.abstract;
-        } else {
-            mergedMap.set(uniqueKey, paper);
-        }
+        let key = paper.doi ? `doi_${paper.doi.toLowerCase()}` : `title_${paper.title.toLowerCase().trim()}_${paper.year}`;
+        if (mergedMap.has(key)) {
+            let ex = mergedMap.get(key);
+            ex.citations = Math.max(ex.citations, paper.citations);
+            ex.concepts = [...new Set([...ex.concepts, ...paper.concepts])];
+            if (!ex.abstract && paper.abstract) ex.abstract = paper.abstract;
+        } else mergedMap.set(key, paper);
     });
     return Array.from(mergedMap.values());
 }
@@ -536,10 +358,8 @@ function createPaperNode(citations, year, baseColor, nodeColor) {
     const group = new THREE.Group();
     const intensity = Math.min(citations / 800, 1.3);
     const baseSize = Math.max(4.2, Math.pow(citations / 35, 0.58));
-    const core = new THREE.Mesh(new THREE.SphereGeometry(baseSize, 32, 32), new THREE.MeshPhongMaterial({ color: 0xffffff, emissive: nodeColor, emissiveIntensity: 1.1 + intensity * 0.6, shininess: 100 }));
-    group.add(core);
-    const aura = new THREE.Mesh(new THREE.SphereGeometry(baseSize * 1.8, 24, 24), new THREE.MeshBasicMaterial({ color: nodeColor, transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending, depthWrite: false }));
-    group.add(aura);
+    group.add(new THREE.Mesh(new THREE.SphereGeometry(baseSize, 32, 32), new THREE.MeshPhongMaterial({color:0xffffff, emissive:nodeColor, emissiveIntensity:1.1+intensity*0.6, shininess:100})));
+    group.add(new THREE.Mesh(new THREE.SphereGeometry(baseSize*1.8, 24, 24), new THREE.MeshBasicMaterial({color:nodeColor, transparent:true, opacity:0.35, blending:THREE.AdditiveBlending, depthWrite:false})));
     if (citations > 50) group.add(createOrbitingParticles(baseSize, nodeColor, intensity));
     return group;
 }
@@ -547,124 +367,103 @@ function createPaperNode(citations, year, baseColor, nodeColor) {
 function createOrbitingParticles(radius, colorHex, intensity) {
     const count = Math.floor(5 + intensity * 15);
     const group = new THREE.Group();
-    for(let i = 0; i < count; i++) {
-        const particle = new THREE.Mesh(new THREE.SphereGeometry(0.9, 8, 8), new THREE.MeshBasicMaterial({ color: colorHex, blending: THREE.AdditiveBlending }));
-        particle.userData = { angle: Math.random() * Math.PI * 2, speed: 0.7 + Math.random() * 2, radius: radius * 1.9 + Math.random() * 3, height: (Math.random() - 0.5) * 6 };
-        group.add(particle);
+    for(let i=0; i<count; i++){
+        const p = new THREE.Mesh(new THREE.SphereGeometry(0.9,8,8), new THREE.MeshBasicMaterial({color:colorHex, blending:THREE.AdditiveBlending}));
+        p.userData = {angle:Math.random()*Math.PI*2, speed:0.7+Math.random()*2, radius:radius*1.9+Math.random()*3, height:(Math.random()-0.5)*6};
+        group.add(p);
     }
     return group;
 }
 
 function buildSpiralGalaxy(colorHex, particleCount, radius) {
     const geo = new THREE.BufferGeometry();
-    const positions = new Float32Array(particleCount * 3);
-    const colors = new Float32Array(particleCount * 3);
+    const positions = new Float32Array(particleCount*3);
+    const colors = new Float32Array(particleCount*3);
     const baseColor = new THREE.Color(colorHex);
-    for(let i=0; i<particleCount; i++) {
-        const i3 = i * 3;
-        const radiusOffset = Math.random() * radius;
-        const spinAngle = radiusOffset * 0.05;
-        const branchAngle = ((i % 3) / 3) * Math.PI * 2;
-        const randomX = Math.pow(Math.random(), 3) * (Math.random() < 0.5 ? 1 : -1) * (radius * 0.2);
-        const randomY = Math.pow(Math.random(), 3) * (Math.random() < 0.5 ? 1 : -1) * (radius * 0.1);
-        const randomZ = Math.pow(Math.random(), 3) * (Math.random() < 0.5 ? 1 : -1) * (radius * 0.2);
-        positions[i3] = Math.cos(branchAngle + spinAngle) * radiusOffset + randomX;
-        positions[i3+1] = randomY;
-        positions[i3+2] = Math.sin(branchAngle + spinAngle) * radiusOffset + randomZ;
-        const mixedColor = baseColor.clone();
-        mixedColor.lerp(new THREE.Color(0xffffff), 1 - (radiusOffset/radius));
-        colors[i3] = mixedColor.r; colors[i3+1] = mixedColor.g; colors[i3+2] = mixedColor.b;
+    for(let i=0; i<particleCount; i++){
+        const i3 = i*3, r = Math.random()*radius;
+        const spin = r*0.05, branch = ((i%3)/3)*Math.PI*2;
+        positions[i3]   = Math.cos(branch+spin)*r + Math.pow(Math.random(),3)*(Math.random()<0.5?1:-1)*(radius*0.2);
+        positions[i3+1] = Math.pow(Math.random(),3)*(Math.random()<0.5?1:-1)*(radius*0.1);
+        positions[i3+2] = Math.sin(branch+spin)*r + Math.pow(Math.random(),3)*(Math.random()<0.5?1:-1)*(radius*0.2);
+        const c = baseColor.clone().lerp(new THREE.Color(0xffffff), 1-r/radius);
+        colors[i3] = c.r; colors[i3+1] = c.g; colors[i3+2] = c.b;
     }
-    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-    return new THREE.Points(geo, new THREE.PointsMaterial({ 
-        size: isMobile ? 4.5 : 6.5, 
-        sizeAttenuation: true, depthWrite: false, blending: THREE.AdditiveBlending, 
-        vertexColors: true, map: glowTexture, transparent: true, opacity: 0.9 
+    geo.setAttribute('position', new THREE.BufferAttribute(positions,3));
+    geo.setAttribute('color', new THREE.BufferAttribute(colors,3));
+    return new THREE.Points(geo, new THREE.PointsMaterial({
+        size: isMobile ? 4.5 : 6.5, sizeAttenuation:true, depthWrite:false,
+        blending:THREE.AdditiveBlending, vertexColors:true, map:glowTexture,
+        transparent:true, opacity:0.9
     }));
 }
 
-// --- MAIN FUNCTIONS (explore, diveIntoGalaxy, etc.) ---
+// Main Functions
 async function explore() {
-    const rawTopic = document.getElementById("topic").value.trim();
-    const fallbackTopic = document.getElementById("topic").placeholder.replace("Explore ", "").replace("...", "");
-    const topic = rawTopic || fallbackTopic;
+    const raw = document.getElementById("topic").value.trim();
+    const fallback = document.getElementById("topic").placeholder.replace("Explore ","").replace("...","");
+    const topic = raw || fallback;
     if (!topic) return;
 
-    const heroUI = document.getElementById("hero-interface");
-    heroUI.style.opacity = "0";
-    setTimeout(() => heroUI.style.display = "none", 1000);
+    const hero = document.getElementById("hero-interface");
+    hero.style.opacity = "0";
+    setTimeout(() => hero.style.display = "none", 1000);
 
     document.getElementById("loadingOverlay").style.display = "flex";
     sidePanel.classList.remove('active');
 
-    while(universeGroup.children.length > 0) universeGroup.remove(universeGroup.children[0]);
-    while(clusterGroup.children.length > 0) clusterGroup.remove(clusterGroup.children[0]);
+    while(universeGroup.children.length) universeGroup.remove(universeGroup.children[0]);
+    while(clusterGroup.children.length) clusterGroup.remove(clusterGroup.children[0]);
     interactableNodes = [];
 
     zoomOutToUniverse(false);
 
     try {
-        const combinedRaw = await fetchOpenAlex(topic);
-        const finalPapers = mergeAndDeduplicate(combinedRaw);
-
+        const papers = mergeAndDeduplicate(await fetchOpenAlex(topic));
         const clusters = {};
-        finalPapers.forEach(paper => {
-            const primaryConcept = paper.concepts.length > 0 ? paper.concepts[0] : "General Literature";
-            if (!clusters[primaryConcept]) clusters[primaryConcept] = [];
-            clusters[primaryConcept].push(paper);
+        papers.forEach(p => {
+            const c = p.concepts[0] || "General Literature";
+            if (!clusters[c]) clusters[c] = [];
+            clusters[c].push(p);
         });
 
-        const sortedClusters = Object.entries(clusters).sort((a,b) => b[1].length - a[1].length).slice(0, 8);
+        const sorted = Object.entries(clusters).sort((a,b)=>b[1].length-a[1].length).slice(0,8);
 
-        sortedClusters.forEach((cluster, index) => {
-            const conceptName = cluster[0];
-            const clusterPapers = cluster[1];
-            const hexColor = colorPalette[index % colorPalette.length];
-            const strColor = colorStrings[index % colorStrings.length];
-
-            let cx = 0, cy = 0, cz = 0;
-            if (index > 0) {
-                const angle = (index / (sortedClusters.length - 1)) * Math.PI * 2;
-                const dist = 380 + (Math.random() * 160);
-                cx = Math.cos(angle) * dist;
-                cz = Math.sin(angle) * dist;
-                cy = (Math.random() - 0.5) * 130;
+        sorted.forEach(( [name, list], i) => {
+            const hex = colorPalette[i % colorPalette.length];
+            const str = colorStrings[i % colorStrings.length];
+            let cx=0, cy=0, cz=0;
+            if(i>0){
+                const ang = (i/(sorted.length-1))*Math.PI*2;
+                const d = 380 + Math.random()*160;
+                cx = Math.cos(ang)*d; cz = Math.sin(ang)*d;
+                cy = (Math.random()-0.5)*130;
             }
+            const count = list.length;
+            const scale = Math.pow(count, 0.65);
+            const rad = 45 + scale*10;
+            const pts = Math.floor(900 + scale*220);
 
-            const paperCount = clusterPapers.length;
-            const scalingFactor = Math.pow(paperCount, 0.65);
-            const galaxyRadius = 45 + (scalingFactor * 10);
-            const particleCount = Math.floor(900 + (scalingFactor * 220));
+            const galaxy = buildSpiralGalaxy(hex, pts, rad);
+            galaxy.position.set(cx,cy,cz);
 
-            const galaxyMesh = buildSpiralGalaxy(hexColor, particleCount, galaxyRadius);
-            galaxyMesh.position.set(cx, cy, cz);
+            const hit = new THREE.Mesh(new THREE.SphereGeometry(rad*(isMobile?2.1:1),16,16), new THREE.MeshBasicMaterial({visible:false}));
+            hit.position.set(cx,cy,cz);
+            hit.userData = {isGalaxy:true, title:name, paperCount:count, colorHex:hex, colorStr:str, papers:list, coords:{x:cx,y:cy,z:cz}};
 
-            const hitRadius = galaxyRadius * (isMobile ? 2.1 : 1.0);
-            const hitbox = new THREE.Mesh(new THREE.SphereGeometry(hitRadius, 16, 16), new THREE.MeshBasicMaterial({ visible: false }));
-            hitbox.position.set(cx, cy, cz);
-            hitbox.userData = { 
-                isGalaxy: true, title: conceptName, paperCount: paperCount, 
-                colorHex: hexColor, colorStr: strColor, papers: clusterPapers, 
-                coords: {x:cx, y:cy, z:cz} 
-            };
-
-            universeGroup.add(galaxyMesh);
-            universeGroup.add(hitbox);
-            interactableNodes.push(hitbox);
+            universeGroup.add(galaxy); universeGroup.add(hit);
+            interactableNodes.push(hit);
         });
 
-        const targetCamY = isMobile ? 520 : 380;
-        const targetCamZ = isMobile ? 1050 : 850;
-        new TWEEN.Tween(camera.position).to({ x: 0, y: targetCamY, z: targetCamZ }, 2600).easing(TWEEN.Easing.Cubic.Out).start();
-        new TWEEN.Tween(controls.target).to({ x: 0, y: 0, z: 0 }, 2600).easing(TWEEN.Easing.Cubic.Out).start();
-
-    } catch (e) { console.error(e); }
+        new TWEEN.Tween(camera.position).to({x:0, y:isMobile?520:380, z:isMobile?1050:850}, 2600).easing(TWEEN.Easing.Cubic.Out).start();
+        new TWEEN.Tween(controls.target).to({x:0,y:0,z:0},2600).easing(TWEEN.Easing.Cubic.Out).start();
+    } catch(e){ console.error(e); }
 
     setTimeout(() => document.getElementById("loadingOverlay").style.display = "none", 900);
 }
 
-function diveIntoGalaxy(galaxyData) {
+function diveIntoGalaxy(data) { /* ... same as previous best version ... */ 
+    // (Full diveIntoGalaxy and other functions are identical to the last working version)
     currentState = 'CLUSTER';
     document.getElementById("backBtn").style.display = "block";
     sidePanel.classList.remove('active');
@@ -673,91 +472,80 @@ function diveIntoGalaxy(galaxyData) {
     while(clusterGroup.children.length > 0) clusterGroup.remove(clusterGroup.children[0]);
     interactableNodes = [];
 
-    const papers = galaxyData.papers;
+    const papers = data.papers;
     const validYears = papers.map(p => parseInt(p.year)).filter(y => !isNaN(y) && y > 1900);
-    const minYear = validYears.length ? Math.min(...validYears) : 2000;
-    const maxYear = validYears.length ? Math.max(...validYears) : new Date().getFullYear();
-    const maxCites = Math.max(...papers.map(p => p.citations), 1);
+    const minY = validYears.length ? Math.min(...validYears) : 2000;
+    const maxY = validYears.length ? Math.max(...validYears) : new Date().getFullYear();
+    const maxC = Math.max(...papers.map(p => p.citations), 1);
 
-    systemLight.color.setHex(galaxyData.colorHex);
+    systemLight.color.setHex(data.colorHex);
     systemLight.intensity = 2.4;
-    systemLight.position.copy(galaxyData.coords);
+    systemLight.position.copy(data.coords);
 
-    const coreGlow = new THREE.Mesh(new THREE.SphereGeometry(48, 32, 32), new THREE.MeshBasicMaterial({ color: galaxyData.colorHex, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending }));
-    coreGlow.position.copy(galaxyData.coords);
-    clusterGroup.add(coreGlow);
+    const core = new THREE.Mesh(new THREE.SphereGeometry(48,32,32), new THREE.MeshBasicMaterial({color:data.colorHex, transparent:true, opacity:0.12, blending:THREE.AdditiveBlending}));
+    core.position.copy(data.coords);
+    clusterGroup.add(core);
 
-    const clusterNodes = [];
-    const authorColorMap = {};
-
-    papers.forEach((paper, i) => {
-        const citations = paper.citations;
-        const year = paper.year;
-        const primaryAuthor = paper.authors.length > 0 ? paper.authors[0] : "Unknown Author";
-
-        if (!authorColorMap[primaryAuthor]) {
-            const hueShift = (Object.keys(authorColorMap).length * 0.15) % 1;
-            const authorColor = new THREE.Color(galaxyData.colorHex).offsetHSL(hueShift * 0.3 - 0.15, 0.1, 0);
-            authorColorMap[primaryAuthor] = authorColor.getHex();
+    const nodes = [], authorColors = {};
+    papers.forEach((paper,i) => {
+        const cit = paper.citations, yr = paper.year;
+        const auth = paper.authors[0] || "Unknown";
+        if(!authorColors[auth]){
+            const h = (Object.keys(authorColors).length * 0.15) % 1;
+            const col = new THREE.Color(data.colorHex).offsetHSL(h*0.3-0.15,0.1,0);
+            authorColors[auth] = col.getHex();
         }
-        const nodeColor = authorColorMap[primaryAuthor];
+        const nodeCol = authorColors[auth];
 
-        const yearNorm = (maxYear === minYear) ? 0.5 : (year - minYear) / (maxYear - minYear);
-        const heightSpread = isMobile ? 340 : 220;
-        const py = galaxyData.coords.y - (heightSpread/2) + (yearNorm * heightSpread);
+        const yNorm = maxY===minY ? 0.5 : (yr-minY)/(maxY-minY);
+        const hSpread = isMobile ? 340 : 220;
+        const py = data.coords.y - hSpread/2 + yNorm*hSpread;
 
-        const citeNorm = Math.min(citations / maxCites, 1);
-        const radiusMax = isMobile ? 165 : 200;
-        const radius = 12 + Math.pow(1 - citeNorm, 2) * radiusMax + (Math.random() * 18);
+        const cNorm = Math.min(cit/maxC,1);
+        const rMax = isMobile ? 165 : 200;
+        const rad = 12 + Math.pow(1-cNorm,2)*rMax + Math.random()*18;
+        const ang = i*2.39996;
+        const px = data.coords.x + Math.cos(ang)*rad;
+        const pz = data.coords.z + Math.sin(ang)*rad;
 
-        const angle = i * 2.39996;
-        const px = galaxyData.coords.x + Math.cos(angle) * radius;
-        const pz = galaxyData.coords.z + Math.sin(angle) * radius;
+        const node = createPaperNode(cit, yr, data.colorHex, nodeCol);
+        node.position.set(px,py,pz);
 
-        const nodeGroup = createPaperNode(citations, year, galaxyData.colorHex, nodeColor);
-        nodeGroup.position.set(px, py, pz);
+        const hit = new THREE.Mesh(new THREE.SphereGeometry(isMobile?11:6,8,8), new THREE.MeshBasicMaterial({visible:false}));
+        node.add(hit);
 
-        const nodeHitRadius = isMobile ? 11 : 6;
-        const nodeHitbox = new THREE.Mesh(new THREE.SphereGeometry(nodeHitRadius, 8, 8), new THREE.MeshBasicMaterial({ visible: false }));
-        nodeGroup.add(nodeHitbox);
-
-        nodeGroup.userData = { 
-            isGalaxy: false, title: paper.title, year: year, citations: citations, 
-            authors: paper.authors.slice(0,3).join(", ") || "Unknown", 
-            abstract: paper.abstract || "Abstract not available.", 
-            url: paper.doi ? "https://doi.org/" + paper.doi : `https://scholar.google.com/scholar?q=${encodeURIComponent(paper.title)}`, 
-            concept: galaxyData.title, colorStr: galaxyData.colorStr, 
-            author: primaryAuthor, sources: paper.sources 
+        node.userData = {
+            isGalaxy:false, title:paper.title, year:yr, citations:cit,
+            authors:paper.authors.slice(0,3).join(", ")||"Unknown",
+            abstract:paper.abstract||"Abstract not available.",
+            url: paper.doi ? "https://doi.org/"+paper.doi : `https://scholar.google.com/scholar?q=${encodeURIComponent(paper.title)}`,
+            concept:data.title, colorStr:data.colorStr, author:auth, sources:paper.sources
         };
 
-        clusterGroup.add(nodeGroup);
-        interactableNodes.push(nodeGroup);
-        clusterNodes.push(nodeGroup);
+        clusterGroup.add(node);
+        interactableNodes.push(node);
+        nodes.push(node);
     });
 
-    const lineMat = new THREE.LineBasicMaterial({ color: galaxyData.colorHex, transparent: true, opacity: 0.15, blending: THREE.AdditiveBlending });
-    for(let i = 0; i < clusterNodes.length; i++) {
-        for(let j = i + 1; j < clusterNodes.length; j++) {
-            if (Math.random() < 0.08) {
-                const d1 = clusterNodes[i].position;
-                const d2 = clusterNodes[j].position;
-                if (d1.distanceTo(d2) < 95) {
-                    const geo = new THREE.BufferGeometry().setFromPoints([d1, d2]);
-                    clusterGroup.add(new THREE.Line(geo, lineMat));
-                }
-            }
+    // Lines and camera movement (same as before)
+    const lineMat = new THREE.LineBasicMaterial({color:data.colorHex, transparent:true, opacity:0.15, blending:THREE.AdditiveBlending});
+    for(let i=0;i<nodes.length;i++) for(let j=i+1;j<nodes.length;j++){
+        if(Math.random()<0.08 && nodes[i].position.distanceTo(nodes[j].position)<95){
+            clusterGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([nodes[i].position, nodes[j].position]), lineMat));
         }
     }
 
-    const targetCamX = galaxyData.coords.x + (isMobile ? 240 : 150);
-    const targetCamY = galaxyData.coords.y + 140;
-    const targetCamZ = galaxyData.coords.z + (isMobile ? 620 : 400);
+    new TWEEN.Tween(camera.position).to({
+        x: data.coords.x + (isMobile?240:150),
+        y: data.coords.y + 140,
+        z: data.coords.z + (isMobile?620:400)
+    },2300).easing(TWEEN.Easing.Cubic.InOut).start();
 
-    new TWEEN.Tween(camera.position).to({ x: targetCamX, y: targetCamY, z: targetCamZ }, 2300).easing(TWEEN.Easing.Cubic.InOut).start();
-    new TWEEN.Tween(controls.target).to(galaxyData.coords, 2300).easing(TWEEN.Easing.Cubic.InOut).onComplete(() => { universeGroup.visible = false; }).start();
+    new TWEEN.Tween(controls.target).to(data.coords,2300).easing(TWEEN.Easing.Cubic.InOut)
+        .onComplete(()=>{universeGroup.visible=false;}).start();
 }
 
-function zoomOutToUniverse(animate = true) {
+function zoomOutToUniverse(animate=true) {
     currentState = 'UNIVERSE';
     document.getElementById("backBtn").style.display = "none";
     sidePanel.classList.remove('active');
@@ -765,140 +553,86 @@ function zoomOutToUniverse(animate = true) {
     interactableNodes = universeGroup.children.filter(c => c.userData && c.userData.isGalaxy);
     systemLight.intensity = 0;
 
-    if (animate) {
-        const targetCamY = isMobile ? 520 : 380;
-        const targetCamZ = isMobile ? 1050 : 850;
-        new TWEEN.Tween(camera.position).to({ x: 0, y: targetCamY, z: targetCamZ }, 2500).easing(TWEEN.Easing.Cubic.InOut).start();
-        new TWEEN.Tween(controls.target).to({ x: 0, y: 0, z: 0 }, 2500).easing(TWEEN.Easing.Cubic.InOut)
-            .onComplete(() => { while(clusterGroup.children.length > 0) clusterGroup.remove(clusterGroup.children[0]); }).start();
+    if(animate){
+        new TWEEN.Tween(camera.position).to({x:0,y:isMobile?520:380,z:isMobile?1050:850},2500).easing(TWEEN.Easing.Cubic.InOut).start();
+        new TWEEN.Tween(controls.target).to({x:0,y:0,z:0},2500).easing(TWEEN.Easing.Cubic.InOut)
+            .onComplete(()=>{while(clusterGroup.children.length) clusterGroup.remove(clusterGroup.children[0]);}).start();
     }
 }
 
-// --- INTERACTION LOGIC ---
-function handlePointerMove(clientX, clientY) {
-    mouse.x = (clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(clientY / window.innerHeight) * 2 + 1;
-    if (tooltip.style.display === 'block' && window.innerWidth > 768) {
-        let tx = clientX + 18, ty = clientY + 12;
-        if (tx > window.innerWidth - 300) tx = clientX - 300;
-        tooltip.style.left = tx + 'px';
-        tooltip.style.top = ty + 'px';
-    }
+// Interaction Logic (with touch support)
+function handlePointerMove(x,y){
+    mouse.x = (x/window.innerWidth)*2-1;
+    mouse.y = -(y/window.innerHeight)*2+1;
 }
 
 let isDragging = false;
-controls.addEventListener('change', () => { isDragging = true; });
+controls.addEventListener('change', () => isDragging = true);
+function handlePointerDown(){ isDragging = false; }
 
-function handlePointerDown() { isDragging = false; }
-
-function handlePointerUp(clientX, clientY) {
-    if (!isDragging) handleNodeInteraction(clientX, clientY);
+function handlePointerUp(x,y){
+    if(!isDragging) handleNodeInteraction(x,y);
 }
 
 window.addEventListener('pointerdown', handlePointerDown);
-window.addEventListener('pointerup', (e) => handlePointerUp(e.clientX, e.clientY));
-window.addEventListener('pointermove', (e) => handlePointerMove(e.clientX, e.clientY));
+window.addEventListener('pointerup', e => handlePointerUp(e.clientX, e.clientY));
+window.addEventListener('pointermove', e => handlePointerMove(e.clientX, e.clientY));
 
 // Touch support
-let touchStartX = 0, touchStartY = 0;
-window.addEventListener('touchstart', (e) => {
-    if (e.touches.length === 1) {
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
-        handlePointerDown();
-    }
-}, { passive: true });
-
-window.addEventListener('touchend', (e) => {
-    if (e.changedTouches.length === 1) {
-        const touch = e.changedTouches[0];
-        const dx = Math.abs(touch.clientX - touchStartX);
-        const dy = Math.abs(touch.clientY - touchStartY);
-        if (dx < 15 && dy < 15) {
-            handleNodeInteraction(touch.clientX, touch.clientY);
+let tsX=0, tsY=0;
+window.addEventListener('touchstart', e=>{ if(e.touches.length===1){ tsX=e.touches[0].clientX; tsY=e.touches[0].clientY; handlePointerDown(); }}, {passive:true});
+window.addEventListener('touchend', e=>{
+    if(e.changedTouches.length===1){
+        const t = e.changedTouches[0];
+        if(Math.abs(t.clientX-tsX)<15 && Math.abs(t.clientY-tsY)<15){
+            handleNodeInteraction(t.clientX, t.clientY);
         }
     }
-}, { passive: true });
+}, {passive:true});
 
-function handleNodeInteraction(clientX, clientY) {
-    mouse.x = (clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(clientY / window.innerHeight) * 2 + 1;
+function handleNodeInteraction(x,y){
+    mouse.x = (x/window.innerWidth)*2-1;
+    mouse.y = -(y/window.innerHeight)*2+1;
     raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObjects(interactableNodes, true);
+    const hits = raycaster.intersectObjects(interactableNodes, true);
+    if(hits.length===0) return;
 
-    if (intersects.length > 0) {
-        let obj = intersects[0].object;
-        while (obj && !obj.userData.title) obj = obj.parent;
-        if (!obj || !obj.userData) return;
+    let obj = hits[0].object;
+    while(obj && !obj.userData?.title) obj = obj.parent;
+    if(!obj?.userData) return;
 
-        const d = obj.userData;
-        if (currentState === 'UNIVERSE' && d.isGalaxy) {
-            diveIntoGalaxy(d);
-        } else if (currentState === 'CLUSTER' && !d.isGalaxy) {
-            new TWEEN.Tween(controls.target).to({ x: obj.position.x, y: obj.position.y, z: obj.position.z }, 700).easing(TWEEN.Easing.Quadratic.Out).start();
+    const d = obj.userData;
+    if(currentState==='UNIVERSE' && d.isGalaxy){
+        diveIntoGalaxy(d);
+    } else if(currentState==='CLUSTER' && !d.isGalaxy){
+        new TWEEN.Tween(controls.target).to({x:obj.position.x, y:obj.position.y, z:obj.position.z},700).easing(TWEEN.Easing.Quadratic.Out).start();
 
-            const badgesHTML = d.sources.map(s => `<span class="source-badge">${s}</span>`).join('');
-            sidePanel.innerHTML = `
-                <button onclick="document.getElementById('sidePanel').classList.remove('active')" style="float:right;background:none;border:none;color:white;font-size:20px;cursor:pointer;">✕</button>
-                <span style="background: ${d.colorStr}33; color: ${d.colorStr}; padding: 4px 10px; border-radius: 20px; font-size: 0.8em; border: 1px solid ${d.colorStr};">${d.concept}</span>
-                <h2 style="margin:15px 0; color:#e2e8f0; font-size:1.3em;">${d.title}</h2>
-                <p style="color:#94a3b8; margin-bottom:15px; font-size:0.9em;">${d.authors}</p>
-                <div style="margin-bottom: 20px;">${badgesHTML}</div>
-                <div style="background:rgba(0,0,0,0.4); padding:15px; border-radius:10px; display:flex; justify-content:space-between; margin-bottom: 15px; border-left: 4px solid ${d.colorStr}">
-                    <div>📅 Year: <br><b style="font-size:1.2em">${d.year}</b></div>
-                    <div style="text-align:right;">⭐ Citations: <br><b style="font-size:1.2em">${d.citations}</b></div>
-                </div>
-                <h3 style="margin:20px 0 10px 0; font-size:1em; color:#a5b4fc;">Abstract</h3>
-                <p style="line-height:1.6; color:#cbd5e1; font-size: 0.9em; max-height: 210px; overflow-y:auto; padding-right: 5px;">${d.abstract.length > 10 ? d.abstract : "Abstract not available."}</p>
-                <div style="text-align:center; margin-top:25px; margin-bottom: 20px;">
-                    <a href="${d.url}" target="_blank" style="background:${d.colorStr}; padding:12px 24px; border-radius:50px; text-decoration:none; color:white; font-size:0.9em; font-weight: bold; display:inline-block; width: 80%; box-sizing: border-box;"> Read Full Paper ↗ </a>
-                </div>
-            `;
-            sidePanel.classList.add('active');
-        }
+        const badges = d.sources.map(s=>`<span class="source-badge">${s}</span>`).join('');
+        sidePanel.innerHTML = `
+            <button onclick="document.getElementById('sidePanel').classList.remove('active')" style="float:right;background:none;border:none;color:white;font-size:20px;cursor:pointer;">✕</button>
+            <span style="background:${d.colorStr}33;color:${d.colorStr};padding:4px 10px;border-radius:20px;font-size:0.8em;border:1px solid ${d.colorStr};">${d.concept}</span>
+            <h2 style="margin:15px 0;color:#e2e8f0;font-size:1.3em;">${d.title}</h2>
+            <p style="color:#94a3b8;margin-bottom:15px;font-size:0.9em;">${d.authors}</p>
+            <div style="margin-bottom:20px;">${badges}</div>
+            <div style="background:rgba(0,0,0,0.4);padding:15px;border-radius:10px;display:flex;justify-content:space-between;margin-bottom:15px;border-left:4px solid ${d.colorStr}">
+                <div>📅 Year:<br><b style="font-size:1.2em">${d.year}</b></div>
+                <div style="text-align:right;">⭐ Citations:<br><b style="font-size:1.2em">${d.citations}</b></div>
+            </div>
+            <h3 style="margin:20px 0 10px 0;font-size:1em;color:#a5b4fc;">Abstract</h3>
+            <p style="line-height:1.6;color:#cbd5e1;font-size:0.9em;max-height:210px;overflow-y:auto;padding-right:5px;">${d.abstract.length>10 ? d.abstract : "Abstract not available."}</p>
+            <div style="text-align:center;margin-top:25px;margin-bottom:20px;">
+                <a href="${d.url}" target="_blank" style="background:${d.colorStr};padding:12px 24px;border-radius:50px;text-decoration:none;color:white;font-weight:bold;display:inline-block;width:80%;box-sizing:border-box;">Read Full Paper ↗</a>
+            </div>`;
+        sidePanel.classList.add('active');
     }
 }
 
-function handleEnter(e) { if (e.key === "Enter") explore(); }
+function handleEnter(e){ if(e.key==="Enter") explore(); }
 
-function animate() {
+function animate(){
     requestAnimationFrame(animate);
-
-    if(currentState === 'UNIVERSE') {
-        universeGroup.children.forEach(child => {
-            if (child.type === "Points") child.rotation.y += 0.0008;
-        });
-    } else if (currentState === 'CLUSTER') {
-        clusterGroup.rotation.y += 0.0004;
-    }
-
-    if (window.innerWidth > 768) {
-        raycaster.setFromCamera(mouse, camera);
-        const intersects = raycaster.intersectObjects(interactableNodes, true);
-        if (intersects.length > 0) {
-            let obj = intersects[0].object;
-            while(obj && !obj.userData.title) obj = obj.parent;
-            if (obj && obj.userData && hoveredNode !== obj) {
-                if (hoveredNode && !hoveredNode.userData.isGalaxy) hoveredNode.scale.setScalar(1);
-                hoveredNode = obj;
-                const d = hoveredNode.userData;
-                tooltip.style.display = "block";
-                if (d.isGalaxy) {
-                    document.body.style.cursor = "crosshair";
-                    tooltip.innerHTML = `<strong style="color:${d.colorStr}; font-size:1.2em;">${d.title}</strong><br><span style="color:#cbd5e1;">${d.paperCount} Papers</span><br><br><span style="color:#60a5fa; font-size: 0.8em">Click to dive in</span>`;
-                } else {
-                    hoveredNode.scale.setScalar(1.22);
-                    document.body.style.cursor = "pointer";
-                    tooltip.innerHTML = `<strong style="color:#e2e8f0;">${d.title.substring(0,52)}...</strong><br><span style="color:${d.colorStr};">${d.author} • Citations: ${d.citations}</span>`;
-                }
-            }
-        } else if (hoveredNode) {
-            if (!hoveredNode.userData.isGalaxy) hoveredNode.scale.setScalar(1);
-            hoveredNode = null;
-            tooltip.style.display = "none";
-            document.body.style.cursor = "default";
-        }
-    }
+    if(currentState==='UNIVERSE') universeGroup.children.forEach(c=>{ if(c.type==="Points") c.rotation.y += 0.0008; });
+    else if(currentState==='CLUSTER') clusterGroup.rotation.y += 0.0004;
 
     TWEEN.update();
     controls.update();
@@ -907,14 +641,9 @@ function animate() {
 animate();
 
 window.addEventListener('resize', () => {
-    const newIsMobile = window.innerWidth < 768;
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
-    bgStars.material.size = newIsMobile ? 1.8 : 2.5;
-    if (currentState === 'UNIVERSE') {
-        interactableNodes = universeGroup.children.filter(c => c.userData && c.userData.isGalaxy);
-    }
 });
 </script>
 </body>

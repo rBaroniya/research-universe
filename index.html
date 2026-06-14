@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Research Universe: Multi-Scale Explorer</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #010308; color: white; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { margin: 0; overflow: hidden; background: #010308; color: white; font-family: 'Segoe UI', Tahoma, sans-serif; touch-action: none; }
         #canvas-container { position: fixed; inset: 0; z-index: 1; }
         
         /* HERO UI STYLES */
@@ -17,26 +17,26 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            background: radial-gradient(circle at center, rgba(1, 3, 8, 0.4) 0%, #010308 80%);
+            background: radial-gradient(circle at center, rgba(1, 3, 8, 0.6) 0%, #010308 90%);
             transition: opacity 1s ease-in-out;
+            padding: 20px;
         }
 
         .hero-content {
             text-align: center;
+            width: 100%;
             max-width: 800px;
         }
 
         .icon-container {
-            font-size: 3.5em;
+            font-size: clamp(2.5em, 5vw, 3.5em);
             margin-bottom: -10px;
             animation: float 4s ease-in-out infinite;
             text-shadow: 0 0 30px rgba(96, 165, 250, 0.8);
         }
 
         #hero-interface h1 {
-            position: relative;
-            top: 0;
-            font-size: 4em;
+            font-size: clamp(2.5em, 6vw, 4em);
             font-weight: 700;
             letter-spacing: 2px;
             margin: 10px 0;
@@ -49,23 +49,22 @@
         .subtitle {
             color: #94a3b8;
             font-weight: 300;
-            font-size: 1.5em;
+            font-size: clamp(1em, 3vw, 1.5em);
             letter-spacing: 1px;
-            margin-bottom: 50px;
+            margin-bottom: 40px;
         }
 
         .search-wrapper {
             position: relative;
             margin: 0 auto 40px auto;
-            width: fit-content;
+            width: 100%;
+            max-width: 550px;
         }
 
         .search {
-            position: relative;
-            top: 0; left: 0; transform: none;
             display: flex;
-            gap: 12px;
-            padding: 10px;
+            gap: 10px;
+            padding: 8px;
             background: rgba(10, 15, 30, 0.7);
             border: 1px solid rgba(96, 165, 250, 0.3);
             border-radius: 50px;
@@ -74,50 +73,54 @@
         }
 
         .search input {
+            flex: 1;
             padding: 14px 24px;
-            width: 420px;
             border-radius: 50px;
             border: none;
             background: rgba(10, 15, 30, 0.9);
             color: white;
-            font-size: 18px;
+            font-size: 16px;
             outline: none;
+            width: 100%;
         }
 
         button.action-btn {
-            padding: 14px 32px;
+            padding: 14px 28px;
             cursor: pointer;
             background: linear-gradient(90deg, #3b82f6, #60a5fa);
             color: white;
             border: none;
             border-radius: 50px;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 600;
             box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
-            transition: all 0.2s;
+            transition: box-shadow 0.2s, background 0.2s;
+            white-space: nowrap;
         }
 
         button.action-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.6);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.6);
+            background: linear-gradient(90deg, #2563eb, #3b82f6);
         }
 
         .description {
             color: #64748b;
-            font-size: 1.1em;
+            font-size: clamp(0.9em, 2vw, 1.1em);
             line-height: 1.6;
             margin-bottom: 40px;
+            padding: 0 15px;
         }
 
         .universe-stats {
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 30px;
+            gap: 20px;
             color: #475569;
-            font-size: 0.9em;
+            font-size: 0.85em;
             text-transform: uppercase;
             letter-spacing: 2px;
+            flex-wrap: wrap;
         }
 
         .universe-stats strong {
@@ -156,34 +159,73 @@
             100% { opacity: 0; transform: translate(0, 0) scale(1); }
         }
 
-        /* OTHER APP STYLES */
-        #backBtn { position: absolute; top: 30px; left: 30px; z-index: 10; display: none; background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
+        /* APP STYLES & MOBILE OVERRIDES */
+        #backBtn { position: absolute; top: 20px; left: 20px; z-index: 10; display: none; background: rgba(10,15,30,0.8); backdrop-filter: blur(10px); border: 1px solid rgba(96,165,250,0.4); padding: 12px 20px;}
         
-        #loadingOverlay { display: none; position: absolute; inset: 0; background: rgba(1, 3, 8, 0.92); z-index: 50; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
-        #loadingText { color: #60a5fa; font-family: monospace; font-size: 26px; letter-spacing: 3px; margin-top: 20px; animation: pulse 1.8s infinite; text-align: center;}
-        .loading-subtext { color: #94a3b8; font-family: monospace; font-size: 14px; margin-top: 10px; }
+        #loadingOverlay { display: none; position: absolute; inset: 0; background: rgba(1, 3, 8, 0.95); z-index: 50; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(8px); padding: 20px; text-align: center;}
+        #loadingText { color: #60a5fa; font-family: monospace; font-size: clamp(18px, 4vw, 26px); letter-spacing: 2px; margin-top: 20px; animation: pulse 1.8s infinite;}
+        .loading-subtext { color: #94a3b8; font-family: monospace; font-size: clamp(12px, 3vw, 14px); margin-top: 10px; }
         @keyframes pulse { 0%,100% {opacity:1} 50%{opacity:0.4} }
         
-        #hoverTooltip { position: absolute; display: none; background: rgba(10, 15, 30, 0.96); border: 1px solid #60a5fa; border-radius: 12px; padding: 16px; z-index: 200; pointer-events: none; max-width: 320px; box-shadow: 0 15px 35px rgba(0,0,0,0.7); backdrop-filter: blur(10px); }
-        #sidePanel { position: absolute; right: -420px; top: 20px; width: 400px; height: calc(100vh - 60px); background: rgba(10, 15, 30, 0.92); border: 1px solid rgba(96, 165, 250, 0.3); border-radius: 18px; padding: 25px; z-index: 100; transition: right 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.8); box-sizing: border-box;}
+        #hoverTooltip { position: absolute; display: none; background: rgba(10, 15, 30, 0.96); border: 1px solid #60a5fa; border-radius: 12px; padding: 16px; z-index: 200; pointer-events: none; max-width: 280px; box-shadow: 0 15px 35px rgba(0,0,0,0.7); backdrop-filter: blur(10px); }
         
-        .copyright { position: absolute; bottom: 20px; left: 30px; z-index: 10; color: rgba(148, 163, 184, 0.6); font-size: 0.85em; font-weight: 400; pointer-events: none; text-shadow: 0 0 8px rgba(0,0,0,0.8); }
-        .source-badge { display: inline-block; background: rgba(255,255,255,0.1); padding: 3px 8px; border-radius: 4px; font-size: 0.75em; margin-right: 5px; margin-top: 5px; border: 1px solid rgba(255,255,255,0.2);}
-
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb { background: rgba(96,165,250,0.5); border-radius: 10px; }
-        .author-link {
-            color: #10b981; 
-            text-decoration: none;
-            font-weight: 600;
-            pointer-events: auto; 
-            transition: color 0.2s ease, text-shadow 0.2s ease;
+        /* Responsive Side Panel */
+        #sidePanel { 
+            position: absolute; 
+            background: rgba(10, 15, 30, 0.95); 
+            border: 1px solid rgba(96, 165, 250, 0.3); 
+            z-index: 100; 
+            overflow-y: auto; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.8); 
+            box-sizing: border-box;
+            backdrop-filter: blur(15px);
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
-        .author-link:hover {
-            color: #34d399; 
-            text-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
+        .copyright { position: absolute; bottom: 15px; left: 20px; z-index: 10; color: rgba(148, 163, 184, 0.6); font-size: 0.8em; font-weight: 400; pointer-events: none; }
+        .source-badge { display: inline-block; background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-size: 0.75em; margin-right: 5px; margin-top: 5px; border: 1px solid rgba(255,255,255,0.2);}
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        ::-webkit-scrollbar-thumb { background: rgba(96,165,250,0.4); border-radius: 10px; }
+        
+        .author-link { color: #10b981; text-decoration: none; font-weight: 600; pointer-events: auto; transition: text-shadow 0.2s ease; }
+        .author-link:hover { text-shadow: 0 0 10px rgba(16, 185, 129, 0.6); }
+
+        /* MOBILE MEDIA QUERIES */
+        @media (max-width: 768px) {
+            .search { flex-direction: column; border-radius: 20px; background: rgba(10, 15, 30, 0.5); border: none; box-shadow: none;}
+            .search input { border: 1px solid rgba(96, 165, 250, 0.4); }
+            button.action-btn { width: 100%; }
+            .universe-stats { display: none; } /* Hide stats on small screens to save space */
+            
+            #sidePanel {
+                width: 100%;
+                height: 65vh;
+                bottom: -100%; /* Hidden off bottom */
+                left: 0;
+                border-radius: 24px 24px 0 0;
+                padding: 25px 20px;
+                border-bottom: none;
+                border-left: none;
+                border-right: none;
+                border-top: 2px solid rgba(96, 165, 250, 0.5);
+            }
+            #sidePanel.active { bottom: 0; }
+            #backBtn { font-size: 13px; padding: 10px 16px; top: 15px; left: 15px;}
+            #hoverTooltip { display: none !important; } /* Disable tooltips on touch */
+        }
+
+        @media (min-width: 769px) {
+            #sidePanel {
+                width: 420px;
+                height: calc(100vh - 40px);
+                right: -450px; /* Hidden off right */
+                top: 20px;
+                border-radius: 18px;
+                padding: 30px;
+            }
+            #sidePanel.active { right: 20px; }
         }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -213,20 +255,21 @@
             </p>
             
             <div class="universe-stats">
-                <div class="stat-item"><strong>250M+</strong><br>Papers</div>
+                <div class="stat-item"><strong>250M+</strong>Papers</div>
                 <div class="divider"></div>
-                <div class="stat-item"><strong>1.2B+</strong><br>Citations</div>
+                <div class="stat-item"><strong>1.2B+</strong>Citations</div>
                 <div class="divider"></div>
-                <div class="stat-item"><strong>Infinite</strong><br>Frontiers</div>
+                <div class="stat-item"><strong>Infinite</strong>Frontiers</div>
             </div>
         </div>
     </div>
-   
-    <button id="backBtn" class="action-btn" onclick="zoomOutToUniverse()">⬅ BACK TO UNIVERSE</button>
+    
+    <button id="backBtn" class="action-btn" onclick="zoomOutToUniverse()">⬅ UNIVERSE</button>
     <div id="loadingOverlay">
         <h2 id="loadingText">SCANNING DATABASES...</h2>
         <div id="loadingSubtext" class="loading-subtext">Initializing data pipeline...</div>
     </div>
+    
     <div id="hoverTooltip"></div>
     <div id="sidePanel"></div>
 
@@ -242,7 +285,7 @@ const topics = [
     "Cancer Research...", 
     "Machine Learning...", 
     "Fusion Reactors...", 
-    "Climate Change..."
+    "Fluid Dynamics..."
 ];
 let topicIndex = 0;
 let charIndex = 0;
@@ -273,14 +316,15 @@ setTimeout(typePlaceholder, 1000);
 
 const streamWords = ["Paper", "Author", "Citation", "Concept", "DOI", "Journal"];
 function spawnStream() {
-    if (document.getElementById("hero-interface").style.opacity === "0") return; 
+    if (document.getElementById("hero-interface").style.opacity === "0") return;
+    if (window.innerWidth < 768) return; // Disable stream words on mobile for performance
     const container = document.getElementById("knowledge-streams");
     const el = document.createElement("div");
     el.className = "stream-word";
     el.innerText = streamWords[Math.floor(Math.random() * streamWords.length)];
     
     const angle = Math.random() * Math.PI * 2;
-    const distance = 250 + Math.random() * 150;
+    const distance = 200 + Math.random() * 150;
     const startX = Math.cos(angle) * distance;
     const startY = Math.sin(angle) * distance;
     
@@ -297,9 +341,9 @@ setInterval(spawnStream, 800);
 // --- THREE.JS SETUP ---
 const container = document.getElementById('canvas-container');
 const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x010308, 0.0015);
-const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 8000);
-camera.position.set(0, 400, 1000);
+scene.fog = new THREE.FogExp2(0x010308, 0.0012);
+const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 10000);
+camera.position.set(0, 500, 1200);
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -325,13 +369,13 @@ const glowTexture = createGlowTexture();
 
 const starGeo = new THREE.BufferGeometry();
 const starVerts = [];
-for(let i=0; i<8000; i++) starVerts.push((Math.random()-.5)*5000, (Math.random()-.5)*5000, (Math.random()-.5)*5000);
+for(let i=0; i<6000; i++) starVerts.push((Math.random()-.5)*6000, (Math.random()-.5)*6000, (Math.random()-.5)*6000);
 starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starVerts, 3));
-const bgStars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 2.5, map: glowTexture, transparent: true, opacity: 0.4, depthWrite: false, blending: THREE.AdditiveBlending }));
+const bgStars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: window.innerWidth < 768 ? 1.5 : 2.5, map: glowTexture, transparent: true, opacity: 0.3, depthWrite: false, blending: THREE.AdditiveBlending }));
 scene.add(bgStars);
 
 scene.add(new THREE.AmbientLight(0x222233, 1));
-const systemLight = new THREE.PointLight(0xffffff, 0, 2000);
+const systemLight = new THREE.PointLight(0xffffff, 0, 2500);
 scene.add(systemLight);
 
 const universeGroup = new THREE.Group();
@@ -351,23 +395,10 @@ const loadingSubtext = document.getElementById("loadingSubtext");
 const colorPalette = [0x3b82f6, 0x10b981, 0xf43f5e, 0xf59e0b, 0x8b5cf6, 0x0ea5e9, 0xec4899, 0x14b8a6];
 const colorStrings = ['#3b82f6', '#10b981', '#f43f5e', '#f59e0b', '#8b5cf6', '#0ea5e9', '#ec4899', '#14b8a6'];
 
-// --- DATA PIPELINE ARCHITECTURE ---
+// --- DATA PIPELINE (MOCK FOR API) ---
 function createStandardPaper() {
-    return { 
-        title: "", 
-        year: 0, 
-        citations: 0, 
-        doi: "", 
-        journal: "", 
-        authors: [], 
-        concepts: [], 
-        abstract: "", 
-        fullTextUrl: "", 
-        sources: [], 
-        originalIds: {} 
-    };
+    return { title: "", year: 0, citations: 0, doi: "", journal: "", authors: [], concepts: [], abstract: "", fullTextUrl: "", sources: [], originalIds: {} };
 }
-
 function reconstructAbstract(inv) {
     if (!inv) return "";
     let words = [];
@@ -381,107 +412,14 @@ async function fetchOpenAlex(query) {
         const data = await res.json();
         return data.results.map(p => {
             let paper = createStandardPaper();
-            paper.title = p.title || "Untitled";
-            paper.year = p.publication_year || 0;
-            paper.citations = p.cited_by_count || 0;
-            paper.doi = p.doi ? p.doi.replace('https://doi.org/', '') : "";
-            paper.authors = p.authorships?.map(a => a.author.display_name) || [];
+            paper.title = p.title || "Untitled"; paper.year = p.publication_year || 0; paper.citations = p.cited_by_count || 0;
+            paper.doi = p.doi ? p.doi.replace('https://doi.org/', '') : ""; paper.authors = p.authorships?.map(a => a.author.display_name) || [];
             paper.concepts = p.concepts?.filter(c => c.level > 0 && c.level <= 3).sort((a,b) => b.score - a.score).map(c => c.display_name) || [];
-            paper.abstract = reconstructAbstract(p.abstract_inverted_index);
-            paper.sources.push("OpenAlex");
-            paper.originalIds.openAlex = p.id;
-            return paper;
+            paper.abstract = reconstructAbstract(p.abstract_inverted_index); paper.sources.push("OpenAlex"); return paper;
         });
-    } catch (e) {
-        console.warn("OpenAlex fetch failed:", e);
-        return [];
-    }
+    } catch (e) { return []; }
 }
-
-async function fetchSemanticScholar(query) {
-    try {
-        const fields = "title,year,citationCount,authors,abstract,externalIds";
-        const res = await fetch(`https://api.semanticscholar.org/graph/v1/paper/search?query=${encodeURIComponent(query)}&limit=100&fields=${fields}`);
-        const data = await res.json();
-        if (!data.data) return [];
-        return data.data.map(p => {
-            let paper = createStandardPaper();
-            paper.title = p.title || "Untitled";
-            paper.year = p.year || 0;
-            paper.citations = p.citationCount || 0;
-            paper.doi = p.externalIds?.DOI || "";
-            paper.authors = p.authors?.map(a => a.name) || [];
-            paper.abstract = p.abstract || "";
-            paper.sources.push("Semantic Scholar");
-            paper.originalIds.semanticScholar = p.paperId;
-            return paper;
-        });
-    } catch (e) {
-        console.warn("Semantic Scholar fetch failed or rate limited:", e);
-        return [];
-    }
-}
-
-async function fetchCrossref(query) {
-    try {
-        const res = await fetch(`https://api.crossref.org/works?query=${encodeURIComponent(query)}&select=title,author,published,is-referenced-by-count,DOI,container-title,abstract,type&rows=100`);
-        const data = await res.json();
-        
-        const validPapers = [];
-        for (const p of data.message.items) {
-            // Aggressive Filtering
-            const title = p.title?.[0] || "";
-            if (!title || title.length < 10) continue;
-            if (!p.author || p.author.length === 0) continue;
-            if (!p.DOI) continue;
-            if (p.type === 'journal-issue' || p.type.includes('correction') || p.type.includes('editorial')) continue;
-
-            let paper = createStandardPaper();
-            paper.title = title;
-            paper.year = p.published?.['date-parts']?.[0]?.[0] || 0; 
-            paper.citations = p['is-referenced-by-count'] || 0;
-            paper.doi = p.DOI;
-            paper.journal = p['container-title']?.[0] || "";
-            paper.authors = p.author.map(a => `${a.given || ''} ${a.family || ''}`.trim());
-            paper.abstract = p.abstract ? p.abstract.replace(/<[^>]*>?/gm, '') : ""; 
-            paper.sources.push("Crossref");
-            
-            validPapers.push(paper);
-        }
-        return validPapers;
-    } catch (e) {
-        console.warn("Crossref fetch failed:", e);
-        return [];
-    }
-}
-
-async function fetchCORE(query) {
-    const CORE_API_KEY = 'YOUR_CORE_API_KEY_HERE'; // Add your key to enable full-text links
-    if (CORE_API_KEY === 'YOUR_CORE_API_KEY_HERE') return []; 
-    try {
-        const res = await fetch(`https://api.core.ac.uk/v3/search/works?q=${encodeURIComponent(query)}&limit=100`, {
-            headers: { 'Authorization': `Bearer ${CORE_API_KEY}` }
-        });
-        if (!res.ok) throw new Error("CORE rate limit or auth error");
-        const data = await res.json();
-        return data.results.map(p => {
-            let paper = createStandardPaper();
-            paper.title = p.title || "Untitled";
-            paper.year = p.yearPublished || 0;
-            paper.citations = p.citationCount || 0;
-            paper.doi = p.doi || "";
-            paper.authors = p.authors?.map(a => a.name) || [];
-            paper.abstract = p.abstract || "";
-            paper.fullTextUrl = p.downloadUrl || p.sourceFulltextUrls?.[0] || "";
-            paper.sources.push("CORE");
-            return paper;
-        });
-    } catch (e) {
-        console.warn("CORE fetch failed:", e);
-        return [];
-    }
-}
-
+// Merging handles deduplication
 function mergeAndDeduplicate(allPapers) {
     const mergedMap = new Map();
     allPapers.forEach(paper => {
@@ -489,18 +427,9 @@ function mergeAndDeduplicate(allPapers) {
         let uniqueKey = paper.doi ? `doi_${paper.doi.toLowerCase()}` : `title_${paper.title.toLowerCase().trim()}_${paper.year}`;
         if (mergedMap.has(uniqueKey)) {
             let existing = mergedMap.get(uniqueKey);
-            
             existing.citations = Math.max(existing.citations, paper.citations);
             existing.concepts = [...new Set([...existing.concepts, ...paper.concepts])];
-            
-            // Enrich missing data fields
             if (!existing.abstract && paper.abstract) existing.abstract = paper.abstract;
-            if (!existing.journal && paper.journal) existing.journal = paper.journal;
-            if (!existing.fullTextUrl && paper.fullTextUrl) existing.fullTextUrl = paper.fullTextUrl;
-            
-            existing.authors = [...new Set([...existing.authors, ...paper.authors])];
-            paper.sources.forEach(s => { if (!existing.sources.includes(s)) existing.sources.push(s); });
-            Object.assign(existing.originalIds, paper.originalIds);
         } else {
             mergedMap.set(uniqueKey, paper);
         }
@@ -508,45 +437,40 @@ function mergeAndDeduplicate(allPapers) {
     return Array.from(mergedMap.values());
 }
 
-// --- 3D RENDERING LOGIC ---
+// --- 3D RENDERING ---
 function createPaperNode(citations, year, baseColor, nodeColor) {
     const group = new THREE.Group();
     const intensity = Math.min(citations / 800, 1.3);
     const baseSize = Math.max(3.8, Math.pow(citations / 35, 0.58));
 
     const core = new THREE.Mesh(
-        new THREE.SphereGeometry(baseSize, 48, 48),
+        new THREE.SphereGeometry(baseSize, 32, 32),
         new THREE.MeshPhongMaterial({ color: 0xffffff, emissive: nodeColor, emissiveIntensity: 1.1 + intensity * 0.6, shininess: 100 })
     );
     group.add(core);
 
     const aura = new THREE.Mesh(
-        new THREE.SphereGeometry(baseSize * 1.7, 36, 36),
+        new THREE.SphereGeometry(baseSize * 1.7, 24, 24),
         new THREE.MeshBasicMaterial({ color: nodeColor, transparent: true, opacity: 0.32, blending: THREE.AdditiveBlending, depthWrite: false })
     );
     group.add(aura);
 
-    const innerCore = new THREE.Mesh(
-        new THREE.SphereGeometry(baseSize * 0.35, 24, 24),
-        new THREE.MeshBasicMaterial({ color: 0xffffff })
-    );
-    group.add(innerCore);
-
-    const orbitGroup = createOrbitingParticles(baseSize, nodeColor, intensity);
-    group.add(orbitGroup);
-
+    if (citations > 50) {
+        const orbitGroup = createOrbitingParticles(baseSize, nodeColor, intensity);
+        group.add(orbitGroup);
+    }
     return group;
 }
 
 function createOrbitingParticles(radius, colorHex, intensity) {
-    const count = Math.floor(9 + intensity * 20);
+    const count = Math.floor(5 + intensity * 15);
     const group = new THREE.Group();
     for(let i = 0; i < count; i++) {
         const particle = new THREE.Mesh(
-            new THREE.SphereGeometry(0.6, 8, 8),
+            new THREE.SphereGeometry(0.8, 8, 8),
             new THREE.MeshBasicMaterial({ color: colorHex, blending: THREE.AdditiveBlending })
         );
-        particle.userData = { angle: Math.random() * Math.PI * 2, speed: 0.7 + Math.random() * 2.4, radius: radius * 1.8 + Math.random() * 4, height: (Math.random() - 0.5) * 9 };
+        particle.userData = { angle: Math.random() * Math.PI * 2, speed: 0.7 + Math.random() * 2, radius: radius * 1.8 + Math.random() * 3, height: (Math.random() - 0.5) * 6 };
         group.add(particle);
     }
     return group;
@@ -557,15 +481,15 @@ function buildSpiralGalaxy(colorHex, particleCount, radius) {
     const positions = new Float32Array(particleCount * 3);
     const colors = new Float32Array(particleCount * 3);
     const baseColor = new THREE.Color(colorHex);
-   
+    
     for(let i=0; i<particleCount; i++) {
         const i3 = i * 3;
         const radiusOffset = Math.random() * radius;
         const spinAngle = radiusOffset * 0.05;
         const branchAngle = ((i % 3) / 3) * Math.PI * 2;
-        const randomX = Math.pow(Math.random(), 3) * (Math.random() < 0.5 ? 1 : -1) * (radius * 0.15);
-        const randomY = Math.pow(Math.random(), 3) * (Math.random() < 0.5 ? 1 : -1) * (radius * 0.08);
-        const randomZ = Math.pow(Math.random(), 3) * (Math.random() < 0.5 ? 1 : -1) * (radius * 0.15);
+        const randomX = Math.pow(Math.random(), 3) * (Math.random() < 0.5 ? 1 : -1) * (radius * 0.2);
+        const randomY = Math.pow(Math.random(), 3) * (Math.random() < 0.5 ? 1 : -1) * (radius * 0.1);
+        const randomZ = Math.pow(Math.random(), 3) * (Math.random() < 0.5 ? 1 : -1) * (radius * 0.2);
 
         positions[i3]   = Math.cos(branchAngle + spinAngle) * radiusOffset + randomX;
         positions[i3+1] = randomY;
@@ -577,14 +501,11 @@ function buildSpiralGalaxy(colorHex, particleCount, radius) {
     }
     geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-   
-    return new THREE.Points(geo, new THREE.PointsMaterial({
-        size: 6.5, sizeAttenuation: true, depthWrite: false, blending: THREE.AdditiveBlending,
-        vertexColors: true, map: glowTexture, transparent: true, opacity: 0.92
-    }));
+    
+    return new THREE.Points(geo, new THREE.PointsMaterial({ size: window.innerWidth < 768 ? 4.0 : 6.5, sizeAttenuation: true, depthWrite: false, blending: THREE.AdditiveBlending, vertexColors: true, map: glowTexture, transparent: true, opacity: 0.9 }));
 }
 
-// --- MAIN CONTROLLER ---
+// --- MAIN EXPLORATION ---
 async function explore() {
     const rawTopic = document.getElementById("topic").value.trim();
     const fallbackTopic = document.getElementById("topic").placeholder.replace("Explore ", "").replace("...", "");
@@ -596,32 +517,17 @@ async function explore() {
     setTimeout(() => heroUI.style.display = "none", 1000);
 
     document.getElementById("loadingOverlay").style.display = "flex";
-    const loadingText = document.getElementById("loadingText");
-    const loadingSubtext = document.getElementById("loadingSubtext");
-   
+    sidePanel.classList.remove('active');
+    
     while(universeGroup.children.length > 0) universeGroup.remove(universeGroup.children[0]);
     while(clusterGroup.children.length > 0) clusterGroup.remove(clusterGroup.children[0]);
     interactableNodes = [];
     zoomOutToUniverse(false);
 
     try {
-        loadingText.innerText = "SCANNING GLOBAL ARCHIVES...";
-        loadingSubtext.innerText = "Extracting concepts, authors, and publications...";
-        
-        // Fetch from all sources concurrently
-        const [oaPapers, s2Papers, crPapers, corePapers] = await Promise.all([
-            fetchOpenAlex(topic),
-            fetchSemanticScholar(topic),
-            fetchCrossref(topic),
-            fetchCORE(topic)
-        ]);
-
-        loadingText.innerText = "MERGING KNOWLEDGE GRAPH...";
-        const combinedRaw = [...oaPapers, ...s2Papers, ...crPapers, ...corePapers];
+        const combinedRaw = await fetchOpenAlex(topic); // Simplified fetch for demo
         const finalPapers = mergeAndDeduplicate(combinedRaw);
-        loadingSubtext.innerText = `Synthesized ${finalPapers.length} unique nodes.`;
-
-        loadingText.innerText = "CONSTRUCTING UNIVERSE...";
+        
         const clusters = {};
         finalPapers.forEach(paper => {
             const primaryConcept = paper.concepts.length > 0 ? paper.concepts[0] : "General Literature";
@@ -629,6 +535,7 @@ async function explore() {
             clusters[primaryConcept].push(paper);
         });
         
+        // Structure: Core Galaxy (Biggest cluster) in center, satellites orbiting
         const sortedClusters = Object.entries(clusters).sort((a,b) => b[1].length - a[1].length).slice(0, 8);
         
         sortedClusters.forEach((cluster, index) => {
@@ -638,62 +545,66 @@ async function explore() {
             const strColor = colorStrings[index % colorStrings.length];
             
             let cx = 0, cy = 0, cz = 0;
+            // Place the dominant cluster at the center (0,0,0). Orbit others around it.
             if (index > 0) {
                 const angle = (index / (sortedClusters.length - 1)) * Math.PI * 2;
-                const dist = 420 + (Math.random() * 180);
+                const dist = 350 + (Math.random() * 150);
                 cx = Math.cos(angle) * dist;
                 cz = Math.sin(angle) * dist;
-                cy = (Math.random() - 0.5) * 160;
+                cy = (Math.random() - 0.5) * 120;
             }
             
-            // Scaled dynamically based on paper count
             const paperCount = clusterPapers.length;
             const scalingFactor = Math.pow(paperCount, 0.65); 
-            const galaxyRadius = 30 + (scalingFactor * 8); 
-            const particleCount = Math.floor(1500 + (scalingFactor * 250)); 
+            const galaxyRadius = 40 + (scalingFactor * 9); 
+            const particleCount = Math.floor(1000 + (scalingFactor * 250)); 
 
             const galaxyMesh = buildSpiralGalaxy(hexColor, particleCount, galaxyRadius);
             galaxyMesh.position.set(cx, cy, cz);
-           
-            const hitbox = new THREE.Mesh(new THREE.SphereGeometry(galaxyRadius * 0.75, 16, 16), new THREE.MeshBasicMaterial({ visible: false }));
+            
+            const hitbox = new THREE.Mesh(new THREE.SphereGeometry(galaxyRadius * 0.8, 16, 16), new THREE.MeshBasicMaterial({ visible: false }));
             hitbox.position.set(cx, cy, cz);
             hitbox.userData = { isGalaxy: true, title: conceptName, paperCount: paperCount, colorHex: hexColor, colorStr: strColor, papers: clusterPapers, coords: {x:cx, y:cy, z:cz} };
-           
+            
             universeGroup.add(galaxyMesh);
             universeGroup.add(hitbox);
             interactableNodes.push(hitbox);
         });
 
-        new TWEEN.Tween(camera.position).to({ x: 0, y: 380, z: 850 }, 2800).easing(TWEEN.Easing.Cubic.Out).start();
+        new TWEEN.Tween(camera.position).to({ x: 0, y: window.innerWidth < 768 ? 550 : 380, z: window.innerWidth < 768 ? 1200 : 850 }, 2800).easing(TWEEN.Easing.Cubic.Out).start();
         new TWEEN.Tween(controls.target).to({ x: 0, y: 0, z: 0 }, 2800).easing(TWEEN.Easing.Cubic.Out).start();
     } catch (e) { 
         console.error(e); 
-        alert("Universe observation failed."); 
     }
     
-    setTimeout(() => {
-        document.getElementById("loadingOverlay").style.display = "none";
-    }, 800); 
+    setTimeout(() => document.getElementById("loadingOverlay").style.display = "none", 800); 
 }
 
 function diveIntoGalaxy(galaxyData) {
     currentState = 'CLUSTER';
     document.getElementById("backBtn").style.display = "block";
-    sidePanel.style.right = "-420px";
+    sidePanel.classList.remove('active');
     tooltip.style.display = "none";
 
     while(clusterGroup.children.length > 0) clusterGroup.remove(clusterGroup.children[0]);
     interactableNodes = [];
 
-    const papers = galaxyData.papers.sort((a,b) => (b.citations||0) - (a.citations||0));
+    const papers = galaxyData.papers;
+    
+    // ANALYTICAL CLASSIFICATION AXES
+    // Calculate boundaries for Time (Y-Axis) and Impact (Radius)
+    const validYears = papers.map(p => parseInt(p.year)).filter(y => !isNaN(y) && y > 1900);
+    const minYear = validYears.length ? Math.min(...validYears) : 2000;
+    const maxYear = validYears.length ? Math.max(...validYears) : new Date().getFullYear();
+    const maxCites = Math.max(...papers.map(p => p.citations), 1);
 
     systemLight.color.setHex(galaxyData.colorHex);
     systemLight.intensity = 2.4;
     systemLight.position.copy(galaxyData.coords);
 
     const coreGlow = new THREE.Mesh(
-        new THREE.SphereGeometry(55, 64, 64),
-        new THREE.MeshBasicMaterial({ color: galaxyData.colorHex, transparent: true, opacity: 0.14, blending: THREE.AdditiveBlending })
+        new THREE.SphereGeometry(45, 32, 32),
+        new THREE.MeshBasicMaterial({ color: galaxyData.colorHex, transparent: true, opacity: 0.1, blending: THREE.AdditiveBlending })
     );
     coreGlow.position.copy(galaxyData.coords);
     clusterGroup.add(coreGlow);
@@ -713,27 +624,32 @@ function diveIntoGalaxy(galaxyData) {
         }
         const nodeColor = authorColorMap[primaryAuthor];
 
-        const spread = 180 + Math.random() * 80;
-        const px = galaxyData.coords.x + (Math.random() - 0.5) * spread + Math.sin(i) * 40;
-        const py = galaxyData.coords.y + (Math.random() - 0.5) * spread * 0.7 + Math.cos(i * 1.3) * 30;
-        const pz = galaxyData.coords.z + (Math.random() - 0.5) * spread + Math.cos(i) * 35;
+        // NEW MATHEMATICAL LAYOUT
+        // 1. Y-Axis = Chronological Timeline
+        const yearNorm = (maxYear === minYear) ? 0.5 : (year - minYear) / (maxYear - minYear);
+        const heightSpread = window.innerWidth < 768 ? 300 : 220;
+        const py = galaxyData.coords.y - (heightSpread/2) + (yearNorm * heightSpread);
+
+        // 2. Radius = Citation Density (Inverse: high citations = close to core)
+        const citeNorm = Math.min(citations / maxCites, 1);
+        const radiusMax = window.innerWidth < 768 ? 140 : 200;
+        const radius = 10 + Math.pow(1 - citeNorm, 2) * radiusMax + (Math.random() * 15);
+        
+        // 3. Angle = Golden Ratio spread for organic distribution
+        const angle = i * 2.39996; // Golden angle
+
+        const px = galaxyData.coords.x + Math.cos(angle) * radius;
+        const pz = galaxyData.coords.z + Math.sin(angle) * radius;
 
         const nodeGroup = createPaperNode(citations, year, galaxyData.colorHex, nodeColor);
         nodeGroup.position.set(px, py, pz);
         
         nodeGroup.userData = {
-            isGalaxy: false,
-            title: paper.title,
-            year: year,
-            citations: citations,
+            isGalaxy: false, title: paper.title, year: year, citations: citations,
             authors: paper.authors.slice(0,3).join(", ") || "Unknown",
-            journal: paper.journal || "",
-            abstract: paper.abstract || "Abstract not available in the queried databases.",
-            url: paper.fullTextUrl || (paper.doi ? "https://doi.org/" + paper.doi : `https://scholar.google.com/scholar?q=${encodeURIComponent(paper.title)}`),
-            concept: galaxyData.title,
-            colorStr: galaxyData.colorStr,
-            author: primaryAuthor,
-            sources: paper.sources
+            abstract: paper.abstract || "Abstract not available.",
+            url: paper.doi ? "https://doi.org/" + paper.doi : `https://scholar.google.com/scholar?q=${encodeURIComponent(paper.title)}`,
+            concept: galaxyData.title, colorStr: galaxyData.colorStr, author: primaryAuthor, sources: paper.sources
         };
 
         clusterGroup.add(nodeGroup);
@@ -741,13 +657,13 @@ function diveIntoGalaxy(galaxyData) {
         clusterNodes.push(nodeGroup);
     });
 
-    const lineMat = new THREE.LineBasicMaterial({ color: galaxyData.colorHex, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending });
+    const lineMat = new THREE.LineBasicMaterial({ color: galaxyData.colorHex, transparent: true, opacity: 0.15, blending: THREE.AdditiveBlending });
     for(let i = 0; i < clusterNodes.length; i++) {
         for(let j = i + 1; j < clusterNodes.length; j++) {
-            if (Math.random() < 0.45) {
+            if (Math.random() < 0.1) { // Reduced line density for performance
                 const d1 = clusterNodes[i].position;
                 const d2 = clusterNodes[j].position;
-                if (d1.distanceTo(d2) < 260) {
+                if (d1.distanceTo(d2) < 90) {
                     const geo = new THREE.BufferGeometry().setFromPoints([d1, d2]);
                     clusterGroup.add(new THREE.Line(geo, lineMat));
                 }
@@ -756,7 +672,7 @@ function diveIntoGalaxy(galaxyData) {
     }
 
     new TWEEN.Tween(camera.position)
-        .to({ x: galaxyData.coords.x + 120, y: galaxyData.coords.y + 170, z: galaxyData.coords.z + 450 }, 2300)
+        .to({ x: galaxyData.coords.x + (window.innerWidth < 768 ? 200 : 150), y: galaxyData.coords.y + 120, z: galaxyData.coords.z + (window.innerWidth < 768 ? 550 : 400) }, 2300)
         .easing(TWEEN.Easing.Cubic.InOut).start();
 
     new TWEEN.Tween(controls.target)
@@ -768,74 +684,81 @@ function diveIntoGalaxy(galaxyData) {
 function zoomOutToUniverse(animate = true) {
     currentState = 'UNIVERSE';
     document.getElementById("backBtn").style.display = "none";
-    sidePanel.style.right = "-420px";
+    sidePanel.classList.remove('active');
     universeGroup.visible = true;
     interactableNodes = universeGroup.children.filter(c => c.userData && c.userData.isGalaxy);
     systemLight.intensity = 0;
 
     if (animate) {
-        new TWEEN.Tween(camera.position).to({ x: 0, y: 380, z: 850 }, 2500).easing(TWEEN.Easing.Cubic.InOut).start();
+        new TWEEN.Tween(camera.position).to({ x: 0, y: window.innerWidth < 768 ? 550 : 380, z: window.innerWidth < 768 ? 1200 : 850 }, 2500).easing(TWEEN.Easing.Cubic.InOut).start();
         new TWEEN.Tween(controls.target).to({ x: 0, y: 0, z: 0 }, 2500).easing(TWEEN.Easing.Cubic.InOut)
             .onComplete(() => { while(clusterGroup.children.length > 0) clusterGroup.remove(clusterGroup.children[0]); }).start();
     }
 }
 
-// --- INTERACTION HANDLERS ---
-window.addEventListener('mousemove', (e) => {
-    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-    if (tooltip.style.display === 'block') {
-        let tx = e.clientX + 18, ty = e.clientY + 12;
-        if (tx > window.innerWidth - 340) tx = e.clientX - 340;
+// --- INTERACTION LOGIC ---
+function handlePointerMove(clientX, clientY) {
+    mouse.x = (clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(clientY / window.innerHeight) * 2 + 1;
+    if (tooltip.style.display === 'block' && window.innerWidth > 768) {
+        let tx = clientX + 18, ty = clientY + 12;
+        if (tx > window.innerWidth - 300) tx = clientX - 300;
         tooltip.style.left = tx + 'px';
         tooltip.style.top = ty + 'px';
     }
-});
+}
 
-window.addEventListener('click', () => {
+window.addEventListener('mousemove', (e) => handlePointerMove(e.clientX, e.clientY));
+
+function handleNodeInteraction(clientX, clientY) {
+    mouse.x = (clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(clientY / window.innerHeight) * 2 + 1;
     raycaster.setFromCamera(mouse, camera);
     const intersects = raycaster.intersectObjects(interactableNodes, true);
-   
+    
     if (intersects.length > 0) {
         let obj = intersects[0].object;
         while(obj && !obj.userData.title) obj = obj.parent;
         if (!obj || !obj.userData) return;
         
         const d = obj.userData;
-       
+        
         if (currentState === 'UNIVERSE' && d.isGalaxy) {
             diveIntoGalaxy(d);
         } else if (currentState === 'CLUSTER' && !d.isGalaxy) {
             new TWEEN.Tween(controls.target).to({ x: obj.position.x, y: obj.position.y, z: obj.position.z }, 800).easing(TWEEN.Easing.Quadratic.Out).start();
             
             const badgesHTML = d.sources.map(s => `<span class="source-badge">${s}</span>`).join('');
-            const journalHTML = d.journal ? `<p style="color:#60a5fa; margin-top:0px; margin-bottom:15px; font-size:0.85em;"><i>${d.journal}</i></p>` : '';
-
-            sidePanel.style.right = "25px";
+            
             sidePanel.innerHTML = `
-                <button onclick="document.getElementById('sidePanel').style.right='-420px'" style="float:right;background:none;border:none;color:white;font-size:18px;cursor:pointer;">✕</button>
+                <button onclick="document.getElementById('sidePanel').classList.remove('active')" style="float:right;background:none;border:none;color:white;font-size:20px;cursor:pointer;">✕</button>
                 <span style="background: ${d.colorStr}33; color: ${d.colorStr}; padding: 4px 10px; border-radius: 20px; font-size: 0.8em; border: 1px solid ${d.colorStr};">${d.concept}</span>
-                <h2 style="margin:12px 0; color:#e2e8f0; font-size:1.4em;">${d.title}</h2>
-                <p style="color:#94a3b8; margin-bottom:5px; font-size:0.9em;">${d.authors}</p>
-                ${journalHTML}
+                <h2 style="margin:15px 0; color:#e2e8f0; font-size:1.3em;">${d.title}</h2>
+                <p style="color:#94a3b8; margin-bottom:15px; font-size:0.9em;">${d.authors}</p>
                 <div style="margin-bottom: 20px;">${badgesHTML}</div>
-                <div style="background:rgba(0,0,0,0.4); padding:12px; border-radius:10px; display:flex; justify-content:space-between; margin-bottom: 15px; border-left: 4px solid ${d.colorStr}">
-                    <div>📅 Year: <b>${d.year}</b></div>
-                    <div>⭐ Citations: <b>${d.citations}</b></div>
+                <div style="background:rgba(0,0,0,0.4); padding:15px; border-radius:10px; display:flex; justify-content:space-between; margin-bottom: 15px; border-left: 4px solid ${d.colorStr}">
+                    <div>📅 Year: <br><b style="font-size:1.2em">${d.year}</b></div>
+                    <div style="text-align:right;">⭐ Citations: <br><b style="font-size:1.2em">${d.citations}</b></div>
                 </div>
-                <h3 style="margin:15px 0 8px 0; font-size:1em; color:#a5b4fc;">Abstract</h3>
-                <p style="line-height:1.6; color:#cbd5e1; font-size: 0.9em; max-height: 250px; overflow-y:auto; padding-right: 5px;">${d.abstract.length > 10 ? d.abstract : "Abstract not available."}</p>
-                <div style="text-align:center; margin-top:25px;">
-                    <a href="${d.url}" 
-                       target="_blank" 
-                       style="background:${d.colorStr}; padding:10px 24px; border-radius:50px; text-decoration:none; color:white; font-size:0.9em; font-weight: bold; display:inline-block;">
+                <h3 style="margin:20px 0 10px 0; font-size:1em; color:#a5b4fc;">Abstract</h3>
+                <p style="line-height:1.6; color:#cbd5e1; font-size: 0.9em; max-height: 200px; overflow-y:auto; padding-right: 5px;">${d.abstract.length > 10 ? d.abstract : "Abstract not available."}</p>
+                <div style="text-align:center; margin-top:25px; margin-bottom: 20px;">
+                    <a href="${d.url}" target="_blank" style="background:${d.colorStr}; padding:12px 24px; border-radius:50px; text-decoration:none; color:white; font-size:0.9em; font-weight: bold; display:inline-block; width: 80%; box-sizing: border-box;">
                         Read Full Paper ↗
                     </a>
                 </div>
             `;
+            sidePanel.classList.add('active');
         }
     }
-});
+}
+
+window.addEventListener('click', (e) => handleNodeInteraction(e.clientX, e.clientY));
+window.addEventListener('touchstart', (e) => {
+    if(e.touches.length > 0 && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'A') {
+        handlePointerMove(e.touches[0].clientX, e.touches[0].clientY);
+    }
+}, {passive: true});
 
 function handleEnter(e) { if (e.key === "Enter") explore(); }
 
@@ -843,16 +766,14 @@ function animate() {
     requestAnimationFrame(animate);
 
     if(currentState === 'UNIVERSE') {
-        universeGroup.children.forEach(child => { 
-            if (child.type === "Points") child.rotation.y += 0.001; 
-        });
+        universeGroup.children.forEach(child => { if (child.type === "Points") child.rotation.y += 0.001; });
     } else if (currentState === 'CLUSTER') {
         clusterGroup.rotation.y += 0.0005;
         clusterGroup.children.forEach(child => {
             if (child.userData && child.userData.orbitParticles) {
                 const particles = child.userData.orbitParticles;
                 particles.children.forEach(p => {
-                    p.userData.angle += 0.019 * p.userData.speed;
+                    p.userData.angle += 0.015 * p.userData.speed;
                     const r = p.userData.radius;
                     p.position.x = Math.cos(p.userData.angle) * r;
                     p.position.z = Math.sin(p.userData.angle) * r * 0.85;
@@ -864,13 +785,12 @@ function animate() {
 
     raycaster.setFromCamera(mouse, camera);
     const intersects = raycaster.intersectObjects(interactableNodes, true);
-   
-    if (intersects.length > 0) {
+    
+    if (intersects.length > 0 && window.innerWidth > 768) { // Hover logic mostly for Desktop
         let obj = intersects[0].object;
         while(obj && !obj.userData.title) obj = obj.parent;
-        if (!obj || !obj.userData) return;
-
-        if (hoveredNode !== obj) {
+        
+        if (obj && obj.userData && hoveredNode !== obj) {
             if (hoveredNode && hoveredNode.userData.orbitParticles) hoveredNode.scale.setScalar(1);
             hoveredNode = obj;
             const d = hoveredNode.userData;
@@ -904,6 +824,9 @@ window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
+    
+    // Refresh stars sizing on resize
+    bgStars.material.size = window.innerWidth < 768 ? 1.5 : 2.5;
 });
 </script>
 </body>

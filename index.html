@@ -16,6 +16,17 @@
             font-size: clamp(12px, 2.5vw, 15px); text-shadow: 0 4px 15px rgba(0,0,0,0.9), 0 1px 3px rgba(0,0,0,1); 
             pointer-events: none; transition: opacity 0.2s; 
         }
+        
+        /* --- NEW: STAR LABELS --- */
+        .paper-label {
+            position: absolute; transform: translate(0, -50%);
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            color: rgba(255, 255, 255, 0.8); font-size: 11px; font-weight: 500;
+            pointer-events: none; transition: opacity 0.2s;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.9), 0 1px 2px rgba(0,0,0,1);
+            white-space: nowrap; letter-spacing: 0.5px;
+        }
+        /* ------------------------ */
 
         #hero-interface { 
             position: absolute; inset: 0; z-index: 10; display: flex; flex-direction: column; 
@@ -431,11 +442,17 @@ function diveIntoGalaxy(galaxyData) {
     while(clusterGroup.children.length > 0) clusterGroup.remove(clusterGroup.children[0]);
     interactableNodes = [];
 
+    // --- Clean up old paper labels just in case ---
+    document.querySelectorAll('.paper-label').forEach(el => el.remove());
+
     const papers = galaxyData.papers;
     const validYears = papers.map(p => parseInt(p.year)).filter(y => !isNaN(y) && y > 1900);
     const minYear = validYears.length ? Math.min(...validYears) : 2000;
     const maxYear = validYears.length ? Math.max(...validYears) : new Date().getFullYear();
     const maxCites = Math.max(...papers.map(p => p.citations), 1);
+
+    // Identify the top 15 most cited papers to attach floating names to
+    const topPapers = [...papers].sort((a,b) => b.citations - a.citations).slice(0, 15);
 
     systemLight.color.setHex(galaxyData.colorHex);
     systemLight.intensity = 2.4;
@@ -479,13 +496,25 @@ function diveIntoGalaxy(galaxyData) {
         const nodeHitbox = new THREE.Mesh(new THREE.SphereGeometry(nodeHitRadius, 8, 8), new THREE.MeshBasicMaterial({ visible: false }));
         nodeGroup.add(nodeHitbox);
 
+        // --- NEW: Create tiny floating label for top papers ---
+        let paperLabel = null;
+        if (topPapers.includes(paper) && primaryAuthor !== "Unknown Author") {
+            paperLabel = document.createElement('div');
+            paperLabel.className = 'paper-label';
+            const shortAuthor = primaryAuthor.split(' ').pop(); // Get last name
+            const shortYear = year ? `'${year.toString().slice(-2)}` : '';
+            paperLabel.innerHTML = `<span style="color:${galaxyData.colorStr}">${shortAuthor}</span> ${shortYear}`;
+            document.getElementById('labels-container').appendChild(paperLabel);
+        }
+
         nodeGroup.userData = { 
              isGalaxy: false, title: paper.title, year: year, citations: citations, 
              authors: paper.authors.slice(0,3).join(", ") || "Unknown", 
              abstract: paper.abstract || "Abstract not available.", 
              url: paper.doi ? "https://doi.org/" + paper.doi : `https://scholar.google.com/scholar?q=${encodeURIComponent(paper.title)}`, 
              concept: galaxyData.title, colorStr: galaxyData.colorStr, 
-             author: primaryAuthor, sources: paper.sources 
+             author: primaryAuthor, sources: paper.sources,
+             labelEl: paperLabel // Store reference to the label
          };
 
         clusterGroup.add(nodeGroup);
@@ -493,12 +522,19 @@ function diveIntoGalaxy(galaxyData) {
         clusterNodes.push(nodeGroup);
     });
 
-    const lineMat = new THREE.LineBasicMaterial({ color: galaxyData.colorHex, transparent: true, opacity: 0.15, blending: THREE.AdditiveBlending });
+    // --- NEW: Intentional Constellation Connections ---
+    const lineMat = new THREE.LineBasicMaterial({ color: galaxyData.colorHex, transparent: true, opacity: 0.25, blending: THREE.AdditiveBlending });
     for(let i = 0; i < clusterNodes.length; i++) {
+        let localConnections = 0;
         for(let j = i + 1; j < clusterNodes.length; j++) {
-            if (Math.random() < 0.08 && clusterNodes[i].position.distanceTo(clusterNodes[j].position) < 95) {
+            const dist = clusterNodes[i].position.distanceTo(clusterNodes[j].position);
+            const sameAuthor = papers[i].authors[0] && papers[i].authors[0] === papers[j].authors[0];
+            
+            // Draw a line if they share an author OR if they are very close in proximity (max 2 proximity lines per node to avoid a giant mess)
+            if (sameAuthor || (dist < 85 && localConnections < 2)) {
                 const geo = new THREE.BufferGeometry().setFromPoints([clusterNodes[i].position, clusterNodes[j].position]);
                 clusterGroup.add(new THREE.Line(geo, lineMat));
+                if (!sameAuthor) localConnections++;
             }
         }
     }
@@ -522,16 +558,15 @@ function zoomOutToUniverse(animate = true) {
         tooltip.style.display = "none";
     }
 
+    // --- NEW: Remove paper labels to clean up the universe view ---
+    document.querySelectorAll('.paper-label').forEach(el => el.remove());
+
     if (animate) {
         new TWEEN.Tween(camera.position).to({ x: 0, y: isMobile ? 520 : 380, z: isMobile ? 1050 : 850 }, 2500).easing(TWEEN.Easing.Cubic.InOut).start();
         new TWEEN.Tween(controls.target).to({ x: 0, y: 0, z: 0 }, 2500).easing(TWEEN.Easing.Cubic.InOut)
             .onComplete(() => { while(clusterGroup.children.length > 0) clusterGroup.remove(clusterGroup.children[0]); }).start();
     }
 }
-
-// ==========================================
-// NEW REWRITTEN INTERACTION LOGIC
-// ==========================================
 
 function handlePointerMove(clientX, clientY) {
     mouse.x = (clientX / window.innerWidth) * 2 - 1;
@@ -548,10 +583,7 @@ window.addEventListener('pointerdown', e => {
 });
 
 window.addEventListener('pointerup', e => {
-    // 1. Prevent 3D raycasting if the user dragged the screen (camera rotation check)
     if (Math.abs(e.clientX - clickStartX) > 10 || Math.abs(e.clientY - clickStartY) > 10) return;
-    
-    // 2. Prevent 3D raycasting if the user clicked on a UI element (like buttons or the side panel)
     if (e.target.closest('button') || e.target.closest('#sidePanel') || e.target.closest('.search-wrapper')) return;
 
     handleNodeInteraction(e.clientX, e.clientY);
@@ -596,23 +628,24 @@ function handleNodeInteraction(clientX, clientY) {
 
 function handleEnter(e) { if (e.key === "Enter") explore(); }
 
+const vectorForLabels = new THREE.Vector3(); // Reusable vector to save memory in the animation loop
+
 function animate() {
     requestAnimationFrame(animate);
 
     if(currentState === 'UNIVERSE') {
-        document.getElementById('labels-container').style.display = 'block';
         universeGroup.children.forEach(child => { 
             if (child.type === "Points") child.rotation.y += 0.0008; 
             
             if (child.userData && child.userData.isGalaxy && child.userData.labelEl) {
-                const vector = child.position.clone();
-                vector.project(camera);
+                child.getWorldPosition(vectorForLabels);
+                vectorForLabels.project(camera);
                 
-                if (vector.z > 1) { 
+                if (vectorForLabels.z > 1) { 
                     child.userData.labelEl.style.display = 'none';
                 } else {
-                    const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
-                    const y = (-(vector.y * 0.5) + 0.5) * window.innerHeight;
+                    const x = (vectorForLabels.x * 0.5 + 0.5) * window.innerWidth;
+                    const y = (-(vectorForLabels.y * 0.5) + 0.5) * window.innerHeight;
                     child.userData.labelEl.style.display = 'block';
                     child.userData.labelEl.style.left = `${x}px`;
                     child.userData.labelEl.style.top = `${y + (isMobile ? 70 : 100)}px`;
@@ -620,8 +653,27 @@ function animate() {
             }
         });
     } else if (currentState === 'CLUSTER') {
-        document.getElementById('labels-container').style.display = 'none'; 
         clusterGroup.rotation.y += 0.0004;
+
+        // --- NEW: Track and render paper labels during cluster rotation ---
+        clusterGroup.children.forEach(child => {
+            if (child.userData && !child.userData.isGalaxy && child.userData.labelEl) {
+                // Get the absolute 3D world position (accounting for the cluster's rotation)
+                child.getWorldPosition(vectorForLabels);
+                vectorForLabels.project(camera);
+                
+                if (vectorForLabels.z > 1) { 
+                    child.userData.labelEl.style.display = 'none';
+                } else {
+                    const x = (vectorForLabels.x * 0.5 + 0.5) * window.innerWidth;
+                    const y = (-(vectorForLabels.y * 0.5) + 0.5) * window.innerHeight;
+                    child.userData.labelEl.style.display = 'block';
+                    // Position label slightly to the right of the star
+                    child.userData.labelEl.style.left = `${x + 20}px`;
+                    child.userData.labelEl.style.top = `${y}px`;
+                }
+            }
+        });
     }
 
     raycaster.setFromCamera(mouse, camera);

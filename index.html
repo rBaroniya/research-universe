@@ -437,7 +437,9 @@ function diveIntoGalaxy(galaxyData) {
     sidePanel.classList.remove('active');
     tooltip.style.display = "none";
 
+    // Instantly hide the 3D universe and the HTML labels
     universeGroup.visible = false; 
+    document.querySelectorAll('.galaxy-label').forEach(el => el.style.display = 'none');
 
     while(clusterGroup.children.length > 0) clusterGroup.remove(clusterGroup.children[0]);
     interactableNodes = [];
